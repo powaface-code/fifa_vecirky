@@ -580,7 +580,7 @@ function getP(id) { return PLAYERS.find(p=>p.id===id); }
 
 function badge(p, sz=30) {
   if (!p) return '';
-  return `<img class="badge" src="${p.logo}?v=2" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
+  return `<img class="badge" src="${p.logo}?v=3" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
 }
 
 function renderSchedule() {
