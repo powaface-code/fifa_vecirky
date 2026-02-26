@@ -196,9 +196,9 @@
 
   .toast {
     position: fixed;
-    bottom: 28px;
+    top: 20px;
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateX(-50%) translateY(-10px);
     background: var(--green-light);
     color: #fff;
     font-family: 'Barlow Condensed', sans-serif;
@@ -213,7 +213,7 @@
     z-index: 300;
     white-space: nowrap;
   }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0px); }
 
   .score-section {
     display: grid;
@@ -611,7 +611,7 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  setTimeout(() => t.classList.remove('show'), 4000);
 }
 
 function buildScore(gid, val, setter) {
