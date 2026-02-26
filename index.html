@@ -64,7 +64,7 @@
     margin-top: 5px;
   }
 
-  .container { max-width: 680px; margin: 0 auto; padding: 0 16px 80px; }
+  .container { max-width: 480px; margin: 0 auto; padding: 0 14px 80px; }
 
   .section-title {
     font-family: 'Bebas Neue', sans-serif;
@@ -109,7 +109,7 @@
     align-items: center;
     gap: 8px;
   }
-  .sched-player.right { justify-content: flex-end; }
+  .sched-player.right { justify-content: flex-start; }
   .sched-vs {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 0.9rem;
@@ -551,8 +551,7 @@ function getP(id) { return PLAYERS.find(p=>p.id===id); }
 
 function badge(p, sz=30) {
   if (!p) return '';
-  const fb = `<span class="bfb" style="width:${sz}px;height:${sz}px;border-color:${p.clr};background:${p.clr}33"></span>`;
-  return `<img class="badge" src="${p.logo}" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px" onerror="this.outerHTML='${fb.replace(/'/g,"\\'")}'">`;
+  return `<img class="badge" src="${p.logo}" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
 }
 
 function renderSchedule() {
