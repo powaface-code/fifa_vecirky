@@ -554,6 +554,8 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
 const PLAYERS = [
   { id:'tom',   name:'Tom',   club:'Real Madrid', clr:'#f5c842', logo:'real_madrid.png' },
@@ -573,7 +575,19 @@ const SCHEDULE = [
   ['luke','kubik'],
 ];
 
-let matches = JSON.parse(localStorage.getItem('fifaMatches') || '[]');
+const firebaseConfig = {
+  apiKey: "AIzaSyClMgDeEt6mSdnm3RON7lccNbfOKMmIefI",
+  authDomain: "fifa-vecirky.firebaseapp.com",
+  projectId: "fifa-vecirky",
+  storageBucket: "fifa-vecirky.firebasestorage.app",
+  messagingSenderId: "760396051325",
+  appId: "1:760396051325:web:2cb1143d9d7e78b9159214"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const matchesCol = db.collection('matches');
+
+let matches = [];
 let sF1=0, sF2=0, editId=null, sE1=0, sE2=0;
 
 function getP(id) { return PLAYERS.find(p=>p.id===id); }
@@ -636,26 +650,23 @@ function saveMatch() {
   const p1=document.getElementById('fP1').value;
   const p2=document.getElementById('fP2').value;
   if (!p1||!p2) { alert('Vyber oba hráče!'); return; }
-  matches.push({id:Date.now(),p1,p2,g1:sF1,g2:sF2});
-  persist();
+  matchesCol.add({p1, p2, g1:sF1, g2:sF2, ts:Date.now()});
   sF1=0; sF2=0;
   buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
   document.getElementById('fP1').value='';
   fillSelect('fP2','','',true);
-  renderAll();
   showToast('✅ Zápas uložen!');
 }
 
 function deleteMatch(id) {
   if (!confirm('Smazat tento zápas?')) return;
-  matches=matches.filter(m=>m.id!==id);
-  persist(); renderAll();
+  matchesCol.doc(id).delete();
 }
 
 function resetAll() {
   if (!confirm('Opravdu chceš smazat VŠECHNY zápasy?\nTato akce je nevratná!')) return;
   if (!confirm('Druhé potvrzení: všechna data budou ztracena. Pokračovat?')) return;
-  matches=[]; persist(); renderAll();
+  matches.forEach(m => matchesCol.doc(m.id).delete());
 }
 
 function openEdit(id) {
@@ -674,9 +685,8 @@ function confirmEdit() {
   const p1=document.getElementById('eP1').value;
   const p2=document.getElementById('eP2').value;
   if (!p1||!p2||p1===p2) { alert('Zkontroluj výběr hráčů!'); return; }
-  const m=matches.find(x=>x.id===editId);
-  if (m) { m.p1=p1; m.p2=p2; m.g1=sE1; m.g2=sE2; }
-  persist(); closeModal(); renderAll();
+  matchesCol.doc(editId).update({p1, p2, g1:sE1, g2:sE2});
+  closeModal();
 }
 
 function calcStandings() {
@@ -729,15 +739,14 @@ function renderMatches() {
       <div class="match-score-box">${m.g1} : ${m.g2}</div>
       <div class="match-p away">${badge(p2,24)}<span class="pname">${p2.name}</span></div>
       <div class="match-actions">
-        <button class="abtn edit" onclick="openEdit(${m.id})">✏️</button>
-        <button class="abtn del" onclick="deleteMatch(${m.id})">🗑️</button>
+        <button class="abtn edit" onclick="openEdit('${m.id}')">✏️</button>
+        <button class="abtn del" onclick="deleteMatch('${m.id}')">🗑️</button>
       </div>
     </div>`;
   }).join('');
 }
 
 function renderAll() { renderStandings(); renderMatches(); }
-function persist() { localStorage.setItem('fifaMatches',JSON.stringify(matches)); }
 
 function init() {
   renderSchedule();
@@ -748,7 +757,10 @@ function init() {
   document.getElementById('fP1').addEventListener('change', function() {
     fillSelect('fP2','',this.value,!this.value);
   });
-  renderAll();
+  matchesCol.orderBy('ts').onSnapshot(snapshot => {
+    matches = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+    renderAll();
+  });
 }
 
 document.getElementById('editModal').addEventListener('click',e=>{
