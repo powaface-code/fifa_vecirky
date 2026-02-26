@@ -109,7 +109,6 @@
     align-items: center;
     gap: 8px;
   }
-  .sched-player { justify-content: flex-end; }
   .sched-player.right { justify-content: flex-start; }
   .sched-vs {
     font-family: 'Bebas Neue', sans-serif;
@@ -117,6 +116,7 @@
     color: var(--gold);
     text-align: center;
     letter-spacing: 2px;
+    padding: 0 6px;
   }
   .sched-club { font-size: 0.75rem; color: var(--text-dim); font-weight: 400; }
 
@@ -561,8 +561,8 @@ function renderSchedule() {
     return `<div class="sched-item">
       <span class="sched-num">${i+1}</span>
       <div class="sched-player">
-        <div>${p1.name}</div>
         ${badge(p1,28)}
+        <div>${p1.name}</div>
       </div>
       <div class="sched-vs">VS</div>
       <div class="sched-player right">
