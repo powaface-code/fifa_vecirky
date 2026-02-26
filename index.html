@@ -191,7 +191,29 @@
     width: 100%;
   }
   .fgroup select:focus { outline: none; border-color: var(--gold); }
+  .fgroup select:disabled { opacity: 0.35; cursor: not-allowed; }
   .fgroup select option { background: #222; }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--green-light);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 12px 28px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.18s, transform 0.18s;
+    pointer-events: none;
+    z-index: 300;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   .score-section {
     display: grid;
@@ -527,6 +549,8 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 const PLAYERS = [
   { id:'tom',   name:'Tom',   club:'Real Madrid', clr:'#f5c842', logo:'real_madrid.png' },
@@ -574,10 +598,20 @@ function renderSchedule() {
   }).join('');
 }
 
-function fillSelect(id, sel='') {
-  document.getElementById(id).innerHTML =
+function fillSelect(id, sel='', exclude='', disabled=false) {
+  const el = document.getElementById(id);
+  el.innerHTML =
     '<option value="">— Vyber hráče —</option>' +
-    PLAYERS.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.name} (${p.club})</option>`).join('');
+    PLAYERS.filter(p => p.id !== exclude)
+      .map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.name} (${p.club})</option>`).join('');
+  el.disabled = disabled;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 function buildScore(gid, val, setter) {
@@ -599,14 +633,14 @@ function saveMatch() {
   const p1=document.getElementById('fP1').value;
   const p2=document.getElementById('fP2').value;
   if (!p1||!p2) { alert('Vyber oba hráče!'); return; }
-  if (p1===p2) { alert('Hráči musí být různí!'); return; }
   matches.push({id:Date.now(),p1,p2,g1:sF1,g2:sF2});
   persist();
   sF1=0; sF2=0;
   buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
   document.getElementById('fP1').value='';
-  document.getElementById('fP2').value='';
+  fillSelect('fP2','','',true);
   renderAll();
+  showToast('✅ Zápas uložen!');
 }
 
 function deleteMatch(id) {
@@ -704,9 +738,13 @@ function persist() { localStorage.setItem('fifaMatches',JSON.stringify(matches))
 
 function init() {
   renderSchedule();
-  fillSelect('fP1'); fillSelect('fP2');
+  fillSelect('fP1');
+  fillSelect('fP2','','',true);
   buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
   fillSelect('eP1'); fillSelect('eP2');
+  document.getElementById('fP1').addEventListener('change', function() {
+    fillSelect('fP2','',this.value,!this.value);
+  });
   renderAll();
 }
 
