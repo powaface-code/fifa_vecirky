@@ -642,6 +642,7 @@
   <div class="danger-zone">
     <div class="danger-label">⚠️ Nebezpečná zóna — nevratná akce</div>
     <button class="reset-btn" onclick="resetAll()">🗑️ Vymazat všechny zápasy</button>
+    <button class="reset-btn" style="margin-top:10px;border-color:rgba(245,200,66,0.3);color:rgba(245,200,66,0.5)" onclick="rerollSchedule()">🎲 Znovu rozlosovat</button>
   </div>
 
 </div>
@@ -734,7 +735,7 @@
 <script>
 const PLAYERS = [
   { id:'tom',   name:'Tom',   club:'Real Madrid', clr:'#f5c842', logo:'real_madrid.png' },
-  { id:'luke',  name:'Luke',  club:'Arsenal',      clr:'#EF0107', logo:'arsenal.png' },
+  { id:'luke',  name:'Luke',  club:'PSG',          clr:'#0055a4', logo:'PSG.png' },
   { id:'kubik', name:'Kubík', club:'Barcelona',   clr:'#a50044', logo:'barcelona.png' },
   { id:'jirik', name:'Jiřík', club:'Liverpool',   clr:'#c8102e', logo:'liverpool.png' },
 ];
@@ -860,6 +861,12 @@ function resetAll() {
   if (!confirm('Opravdu chceš smazat VŠECHNY zápasy?\nTato akce je nevratná!')) return;
   if (!confirm('Druhé potvrzení: všechna data budou ztracena. Pokračovat?')) return;
   matches.forEach(m => matchesCol.doc(m.id).delete());
+}
+
+function rerollSchedule() {
+  SCHEDULE = generateSchedule();
+  renderSchedule();
+  showToast('🎲 Nové rozlosování!');
 }
 
 function openEdit(id) {
