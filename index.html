@@ -568,6 +568,123 @@
     touch-action: manipulation;
   }
   .back-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--white); letter-spacing: 2px; }
+
+  /* CLUB BACKGROUND THEMES */
+  body.bg-tom {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(245,200,66,0.32) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255,255,255,0.12) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+  }
+  body.bg-luke {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(0,85,164,0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(227,6,19,0.25) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+  }
+  body.bg-kubik {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(165,0,68,0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(0,77,152,0.3) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+  }
+  body.bg-jirik {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(200,16,46,0.45) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(200,16,46,0.2) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+  }
+
+  /* STORE */
+  .store-grid { display: flex; flex-direction: column; gap: 12px; }
+  .store-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.2s;
+  }
+  .store-card.active-bg { border-color: var(--gold); background: rgba(245,200,66,0.06); }
+  .store-card-preview {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .store-card-info { flex: 1; min-width: 0; }
+  .store-card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+  .store-card-desc {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .store-badge-active {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--gold);
+    color: #111;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 5px;
+    display: inline-block;
+  }
+  .store-buy-btn {
+    background: linear-gradient(135deg, var(--green), var(--green-light));
+    border: none;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .store-buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .store-info-box {
+    background: rgba(245,200,66,0.07);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .revolut-btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, #191c6b, #2b5ce6);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    margin-bottom: 12px;
+    touch-action: manipulation;
+  }
 </style>
 </head>
 <body>
@@ -580,6 +697,7 @@
 <nav class="tabs">
   <button class="tab active" data-tab="current" onclick="showTab('current')">⚽ Aktuální</button>
   <button class="tab" data-tab="history" onclick="showTab('history')">📚 Historie</button>
+  <button class="tab" data-tab="store" onclick="showTab('store')">🛒 Store</button>
 </nav>
 
 <div id="view-current">
@@ -709,6 +827,17 @@
   </div>
 </div>
 
+<!-- STORE VIEW -->
+<div id="view-store" style="display:none">
+  <div class="container">
+    <div class="section-title">🎨 Pozadí večírku</div>
+    <div class="store-info-box">
+      Vyber téma svého klubu za <strong style="color:var(--gold)">100 Kč</strong>. Po potvrzení platby přes Revolut se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje.
+    </div>
+    <div class="store-grid" id="storeGrid"></div>
+  </div>
+</div>
+
 <!-- PARTY DETAIL VIEW -->
 <div id="view-party-detail" style="display:none">
   <div class="back-bar">
@@ -725,6 +854,24 @@
     </div>
     <div class="section-title">📜 Zápasy večírku</div>
     <div class="matches-list" id="partyDetailMatchesList"></div>
+  </div>
+</div>
+
+<!-- STORE BUY MODAL -->
+<div class="overlay" id="storeBuyModal">
+  <div class="modal">
+    <h3 id="storeBuyTitle">🛒 Koupit pozadí</h3>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--text-dim);line-height:1.6;margin-bottom:14px">
+      Cena: <strong style="color:var(--gold);font-size:1.15rem">100 Kč</strong><br>
+      Pošli platbu přes Revolut a klikni na potvrzení:
+    </div>
+    <a id="storeBuyRevolutLink" href="#" target="_blank" class="revolut-btn">
+      💳 Otevřít Revolut · 100 Kč
+    </a>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeStoreBuyModal()">Zrušit</button>
+      <button class="btn-ok" onclick="confirmStoreBuy()">✅ Zaplatil/a jsem</button>
+    </div>
   </div>
 </div>
 
@@ -781,6 +928,72 @@ const db = firebase.firestore();
 const matchesCol = db.collection('matches');
 const partiesCol = db.collection('parties');
 const scheduleDoc = db.collection('config').doc('schedule');
+const storeDoc   = db.collection('config').doc('store');
+
+// ── STORE CONFIG ─────────────────────────────────────────────────────────────
+// Změň na svůj Revolut username (např. 'jannovak')
+const REVOLUT_HANDLE = 'TVUJ_USERNAME';
+
+const BACKGROUNDS = [
+  { id:'tom',   name:'Real Madrid', clr:'#f5c842', bg:'rgba(245,200,66,0.25)' },
+  { id:'luke',  name:'PSG',         clr:'#4d9ee8', bg:'rgba(0,85,164,0.4)'   },
+  { id:'kubik', name:'Barcelona',   clr:'#e05080', bg:'rgba(165,0,68,0.35)'  },
+  { id:'jirik', name:'Liverpool',   clr:'#e84040', bg:'rgba(200,16,46,0.4)'  },
+];
+
+let activeBg = null;
+let pendingBgId = null;
+
+function applyBackground(bgId) {
+  document.body.classList.remove('bg-tom','bg-luke','bg-kubik','bg-jirik');
+  if (bgId) document.body.classList.add('bg-' + bgId);
+}
+
+function renderStore() {
+  const el = document.getElementById('storeGrid');
+  if (!el) return;
+  el.innerHTML = BACKGROUNDS.map(bg => {
+    const p = getP(bg.id);
+    const isActive = activeBg === bg.id;
+    return `<div class="store-card${isActive ? ' active-bg' : ''}">
+      <div class="store-card-preview" style="background:${bg.bg}">
+        ${badge(p, 42)}
+      </div>
+      <div class="store-card-info">
+        <div class="store-card-name" style="color:${bg.clr}">${bg.name}</div>
+        <div class="store-card-desc">Hráč: ${p.name}</div>
+        ${isActive ? '<span class="store-badge-active">✓ Aktivní</span>' : ''}
+      </div>
+      <button class="store-buy-btn" onclick="openStoreBuyModal('${bg.id}')" ${isActive ? 'disabled' : ''}>
+        ${isActive ? 'Aktivní' : '100 Kč'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function openStoreBuyModal(bgId) {
+  const bg = BACKGROUNDS.find(b => b.id === bgId);
+  pendingBgId = bgId;
+  document.getElementById('storeBuyTitle').textContent = `🛒 ${bg.name} pozadí`;
+  document.getElementById('storeBuyRevolutLink').href = `https://revolut.me/${REVOLUT_HANDLE}`;
+  document.getElementById('storeBuyModal').classList.add('open');
+}
+
+function closeStoreBuyModal() {
+  document.getElementById('storeBuyModal').classList.remove('open');
+  pendingBgId = null;
+}
+
+async function confirmStoreBuy() {
+  if (!pendingBgId) return;
+  const bgId = pendingBgId;
+  const p = getP(bgId);
+  const bg = BACKGROUNDS.find(b => b.id === bgId);
+  await storeDoc.set({ activeBg: bgId, purchasedBy: p.name, purchasedAt: Date.now() });
+  closeStoreBuyModal();
+  showToast(`🎨 ${p.name} aktivoval ${bg.name} pozadí!`);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 let matches = [], parties = [];
 let sF1=0, sF2=0, editId=null, sE1=0, sE2=0;
@@ -932,8 +1145,10 @@ function showTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
   document.getElementById('view-current').style.display = tab==='current' ? '' : 'none';
   document.getElementById('view-history').style.display = tab==='history' ? '' : 'none';
+  document.getElementById('view-store').style.display   = tab==='store'   ? '' : 'none';
   document.getElementById('view-party-detail').style.display = 'none';
   if (tab==='history') renderHistory();
+  if (tab==='store') renderStore();
 }
 
 function formatDate(d) {
@@ -959,6 +1174,7 @@ async function confirmCloseParty() {
     matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0}))
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
+  storeDoc.set({ activeBg: null });
   document.getElementById('partyDate').value = '';
   scheduleDoc.set({ pairs: generateSchedule() });
   showToast('🏁 Večírek archivován!');
@@ -1056,6 +1272,14 @@ function init() {
     } else {
       scheduleDoc.set({ pairs: generateSchedule() });
     }
+  });
+  storeDoc.onSnapshot(snap => {
+    activeBg = snap.exists ? (snap.data().activeBg || null) : null;
+    applyBackground(activeBg);
+    renderStore();
+  });
+  document.getElementById('storeBuyModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('storeBuyModal')) closeStoreBuyModal();
   });
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
