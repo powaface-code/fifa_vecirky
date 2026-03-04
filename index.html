@@ -739,16 +739,33 @@ const PLAYERS = [
   { id:'jirik', name:'Jiřík', club:'Liverpool',   clr:'#c8102e', logo:'liverpool.png' },
 ];
 
-// 1 cyklus – každý s každým = 6 zápasů
-// Seřazeno: max 2 za sebou pro jednoho hráče
-const SCHEDULE = [
-  ['tom','luke'],
-  ['kubik','jirik'],
-  ['tom','kubik'],
-  ['luke','jirik'],
-  ['jirik','tom'],
-  ['luke','kubik'],
-];
+function generateSchedule() {
+  // Všechny páry (každý s každým)
+  const pairs = [];
+  for (let i = 0; i < PLAYERS.length; i++)
+    for (let j = i+1; j < PLAYERS.length; j++)
+      pairs.push([PLAYERS[i].id, PLAYERS[j].id]);
+
+  // Náhodné pořadí s podmínkou: žádný hráč 3x za sebou
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    for (let i = pairs.length-1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i+1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    let valid = true;
+    for (let i = 2; i < pairs.length; i++) {
+      for (const pid of pairs[i]) {
+        if (pairs[i-1].includes(pid) && pairs[i-2].includes(pid)) { valid = false; break; }
+      }
+      if (!valid) break;
+    }
+    if (valid) break;
+  }
+  // Náhodně prohodit domácí/hosté
+  return pairs.map(p => Math.random() > 0.5 ? [p[1], p[0]] : p);
+}
+
+let SCHEDULE = generateSchedule();
 
 const firebaseConfig = {
   apiKey: "AIzaSyClMgDeEt6mSdnm3RON7lccNbfOKMmIefI",
@@ -936,6 +953,8 @@ async function confirmCloseParty() {
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
   document.getElementById('partyDate').value = '';
+  SCHEDULE = generateSchedule();
+  renderSchedule();
   showToast('🏁 Večírek archivován!');
   showTab('history');
 }
