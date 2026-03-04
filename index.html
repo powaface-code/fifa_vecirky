@@ -687,17 +687,7 @@
     cursor: pointer;
     color: #fff;
   }
-  .pay-btn-revolut { background: linear-gradient(135deg, #191c6b, #2b5ce6); }
-  .pay-btn-stripe  { background: linear-gradient(135deg, #1a1a2e, #6772e5); }
-  .pay-divider {
-    display: flex; align-items: center; gap: 10px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--text-dim); margin: 4px 0 10px;
-  }
-  .pay-divider::before, .pay-divider::after {
-    content: ''; flex: 1; height: 1px; background: var(--line);
-  }
+  .pay-btn-stripe { background: linear-gradient(135deg, #1a1a2e, #6772e5); }
 </style>
 </head>
 <body>
@@ -878,14 +868,9 @@
       Cena: <strong style="color:var(--gold);font-size:1.15rem">100 Kč</strong><br>
       Vyber způsob platby a po zaplacení potvrď:
     </div>
-    <a id="storeBuyRevolutLink" href="#" target="_blank" class="pay-btn pay-btn-revolut">
-      <svg width="20" height="20" viewBox="0 0 50 50" fill="none"><circle cx="25" cy="25" r="25" fill="#fff" fill-opacity=".15"/><path d="M17 12h10.5c4.14 0 7.5 3.36 7.5 7.5 0 2.9-1.65 5.42-4.08 6.72L35 38H28l-3.6-10.5H24V38h-7V12zm7 5.5v6h3c1.66 0 3-1.34 3-3s-1.34-3-3-3h-3z" fill="#fff"/></svg>
-      Revolut · 100 Kč
-    </a>
-    <div class="pay-divider">nebo</div>
     <a id="storeBuyStripeLink" href="#" target="_blank" class="pay-btn pay-btn-stripe">
-      <svg width="20" height="14" viewBox="0 0 32 14" fill="none"><rect width="10" height="14" rx="2" fill="#fff" fill-opacity=".9"/><rect x="12" width="10" height="14" rx="2" fill="#fff" fill-opacity=".6"/><rect x="24" width="8" height="14" rx="2" fill="#fff" fill-opacity=".35"/></svg>
-      Google Pay / Apple Pay / Karta
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" fill="#fff" fill-opacity=".9"/></svg>
+      Zaplatit · Google Pay / Apple Pay / Karta
     </a>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeStoreBuyModal()">Zrušit</button>
@@ -950,10 +935,8 @@ const scheduleDoc = db.collection('config').doc('schedule');
 const storeDoc   = db.collection('config').doc('store');
 
 // ── STORE CONFIG ─────────────────────────────────────────────────────────────
-// Změň na svůj Revolut username (např. 'jannovak')
-const REVOLUT_HANDLE = 'TVUJ_USERNAME';
-// Stripe payment link — vytvoř na dashboard.stripe.com → Payment Links (produkt za 100 Kč)
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/XXXXX';
+// Stripe payment link
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/14AbJ18uQ3I26PPdzh4Ja00';
 
 const BACKGROUNDS = [
   { id:'tom',   name:'Real Madrid', clr:'#f5c842', bg:'rgba(245,200,66,0.25)' },
@@ -996,7 +979,6 @@ function openStoreBuyModal(bgId) {
   const bg = BACKGROUNDS.find(b => b.id === bgId);
   pendingBgId = bgId;
   document.getElementById('storeBuyTitle').textContent = `🛒 ${bg.name} pozadí`;
-  document.getElementById('storeBuyRevolutLink').href = `https://revolut.me/${REVOLUT_HANDLE}`;
   document.getElementById('storeBuyStripeLink').href = STRIPE_PAYMENT_LINK;
   document.getElementById('storeBuyModal').classList.add('open');
 }
