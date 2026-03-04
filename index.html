@@ -762,8 +762,8 @@ function generateSchedule() {
     }
     if (valid) break;
   }
-  // Náhodně prohodit domácí/hosté
-  return pairs.map(p => Math.random() > 0.5 ? [p[1], p[0]] : p);
+  // Vrátit jako objekty — Firestore nepodporuje vnořená pole
+  return pairs.map(([a, b]) => Math.random() > 0.5 ? {p1:b, p2:a} : {p1:a, p2:b});
 }
 
 let SCHEDULE = [];
@@ -793,8 +793,8 @@ function badge(p, sz=30) {
 }
 
 function renderSchedule() {
-  document.getElementById('scheduleList').innerHTML = SCHEDULE.map(([a,b],i)=>{
-    const p1=getP(a), p2=getP(b);
+  document.getElementById('scheduleList').innerHTML = SCHEDULE.map((m,i)=>{
+    const p1=getP(m.p1), p2=getP(m.p2);
     return `<div class="sched-item">
       <span class="sched-num">${i+1}</span>
       <div class="sched-player">
@@ -1052,10 +1052,10 @@ function init() {
   scheduleDoc.onSnapshot(snap => {
     if (snap.exists) {
       SCHEDULE = snap.data().pairs;
+      renderSchedule();
     } else {
       scheduleDoc.set({ pairs: generateSchedule() });
     }
-    renderSchedule();
   });
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
