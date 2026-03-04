@@ -766,7 +766,7 @@ function generateSchedule() {
   return pairs.map(p => Math.random() > 0.5 ? [p[1], p[0]] : p);
 }
 
-let SCHEDULE = generateSchedule();
+let SCHEDULE = [];
 
 const firebaseConfig = {
   apiKey: "AIzaSyClMgDeEt6mSdnm3RON7lccNbfOKMmIefI",
@@ -780,6 +780,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const matchesCol = db.collection('matches');
 const partiesCol = db.collection('parties');
+const scheduleDoc = db.collection('config').doc('schedule');
 
 let matches = [], parties = [];
 let sF1=0, sF2=0, editId=null, sE1=0, sE2=0;
@@ -864,8 +865,7 @@ function resetAll() {
 }
 
 function rerollSchedule() {
-  SCHEDULE = generateSchedule();
-  renderSchedule();
+  scheduleDoc.set({ pairs: generateSchedule() });
   showToast('🎲 Nové rozlosování!');
 }
 
@@ -960,8 +960,7 @@ async function confirmCloseParty() {
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
   document.getElementById('partyDate').value = '';
-  SCHEDULE = generateSchedule();
-  renderSchedule();
+  scheduleDoc.set({ pairs: generateSchedule() });
   showToast('🏁 Večírek archivován!');
   showTab('history');
 }
@@ -1034,7 +1033,6 @@ function renderMatches() {
 function renderAll() { renderStandings(); renderMatches(); }
 
 function init() {
-  renderSchedule();
   fillSelect('fP1');
   fillSelect('fP2','','',true);
   buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
@@ -1050,6 +1048,14 @@ function init() {
   });
   partiesCol.orderBy('closedAt').onSnapshot(snapshot => {
     parties = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+  });
+  scheduleDoc.onSnapshot(snap => {
+    if (snap.exists) {
+      SCHEDULE = snap.data().pairs;
+    } else {
+      scheduleDoc.set({ pairs: generateSchedule() });
+    }
+    renderSchedule();
   });
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
