@@ -671,23 +671,6 @@
     line-height: 1.5;
     margin-bottom: 16px;
   }
-  .pay-btn {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.1rem;
-    letter-spacing: 2px;
-    padding: 15px 16px;
-    border-radius: 10px;
-    text-align: center;
-    text-decoration: none;
-    margin-bottom: 10px;
-    touch-action: manipulation;
-    cursor: pointer;
-    color: #fff;
-  }
-  .pay-btn-stripe { background: linear-gradient(135deg, #1a1a2e, #6772e5); }
 </style>
 </head>
 <body>
@@ -860,24 +843,6 @@
   </div>
 </div>
 
-<!-- STORE BUY MODAL -->
-<div class="overlay" id="storeBuyModal">
-  <div class="modal">
-    <h3 id="storeBuyTitle">🛒 Koupit pozadí</h3>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--text-dim);line-height:1.5;margin-bottom:14px">
-      Cena: <strong style="color:var(--gold);font-size:1.15rem">15 Kč</strong><br>
-      Zaplať a pak potvrď aktivaci:
-    </div>
-    <a id="storeBuyStripeLink" href="#" target="_blank" class="pay-btn pay-btn-stripe">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" fill="#fff" fill-opacity=".9"/></svg>
-      Zaplatit 15 Kč · Google Pay / Apple Pay / Karta
-    </a>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeStoreBuyModal()">Zrušit</button>
-      <button class="btn-ok" onclick="confirmStoreBuy()">✅ Zaplatil/a jsem</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -935,8 +900,8 @@ const scheduleDoc = db.collection('config').doc('schedule');
 const storeDoc   = db.collection('config').doc('store');
 
 // ── STORE CONFIG ─────────────────────────────────────────────────────────────
-// Stripe payment link
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/14AbJ18uQ3I26PPdzh4Ja00';
+// Vercel API URL — po deployi na Vercel zkontroluj URL a uprav pokud se liší
+const API_BASE = 'https://fifa-vecirky.vercel.app';
 
 const BACKGROUNDS = [
   { id:'tom',   name:'Real Madrid', clr:'#f5c842', bg:'rgba(245,200,66,0.25)' },
@@ -946,7 +911,6 @@ const BACKGROUNDS = [
 ];
 
 let activeBg = null;
-let pendingBgId = null;
 
 function applyBackground(bgId) {
   document.body.classList.remove('bg-tom','bg-luke','bg-kubik','bg-jirik');
@@ -968,34 +932,48 @@ function renderStore() {
         <div class="store-card-desc">Hráč: ${p.name}</div>
         ${isActive ? '<span class="store-badge-active">✓ Aktivní</span>' : ''}
       </div>
-      <button class="store-buy-btn" onclick="openStoreBuyModal('${bg.id}')" ${isActive ? 'disabled' : ''}>
+      <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
         ${isActive ? 'Aktivní' : '15 Kč'}
       </button>
     </div>`;
   }).join('');
 }
 
-function openStoreBuyModal(bgId) {
-  const bg = BACKGROUNDS.find(b => b.id === bgId);
-  pendingBgId = bgId;
-  document.getElementById('storeBuyTitle').textContent = `🛒 ${bg.name} pozadí`;
-  document.getElementById('storeBuyStripeLink').href = STRIPE_PAYMENT_LINK;
-  document.getElementById('storeBuyModal').classList.add('open');
+function startPayment(bgId) {
+  // Přesměruj na Vercel API → ta vytvoří Stripe session → Stripe platební brána
+  window.location.href = `${API_BASE}/api/create-checkout?bg=${bgId}`;
 }
 
-function closeStoreBuyModal() {
-  document.getElementById('storeBuyModal').classList.remove('open');
-  pendingBgId = null;
-}
+async function checkPaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') !== 'ok') return;
 
-async function confirmStoreBuy() {
-  if (!pendingBgId) return;
-  const bgId = pendingBgId;
-  const p = getP(bgId);
-  const bg = BACKGROUNDS.find(b => b.id === bgId);
-  await storeDoc.set({ activeBg: bgId, purchasedBy: p.name, purchasedAt: Date.now() });
-  closeStoreBuyModal();
-  showToast(`🎨 ${p.name} aktivoval ${bg.name} pozadí!`);
+  const bg      = params.get('bg');
+  const session = params.get('session');
+
+  // Vyčisti URL (odstraň parametry)
+  window.history.replaceState({}, '', window.location.pathname);
+
+  if (!bg || !session) return;
+
+  showToast('⏳ Ověřuji platbu…');
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/verify-payment?session=${encodeURIComponent(session)}&bg=${encodeURIComponent(bg)}`);
+    const data = await res.json();
+
+    if (data.ok) {
+      const p  = getP(bg);
+      const bgObj = BACKGROUNDS.find(b => b.id === bg);
+      await storeDoc.set({ activeBg: bg, purchasedBy: p?.name || bg, purchasedAt: Date.now() });
+      showToast(`🎨 ${bgObj?.name} pozadí aktivováno!`);
+      showTab('store');
+    } else {
+      showToast('❌ Platba nebyla ověřena');
+    }
+  } catch (e) {
+    showToast('❌ Chyba při ověření platby');
+  }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1282,9 +1260,7 @@ function init() {
     applyBackground(activeBg);
     renderStore();
   });
-  document.getElementById('storeBuyModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('storeBuyModal')) closeStoreBuyModal();
-  });
+  checkPaymentReturn();
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
   });
