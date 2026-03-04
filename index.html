@@ -835,7 +835,7 @@
   <div class="container">
     <div class="section-title">🎨 Pozadí večírku</div>
     <div class="store-info-box">
-      Vyber téma svého klubu za <strong style="color:var(--gold)">100 Kč</strong>. Po potvrzení platby přes Revolut se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje.
+      Vyber téma svého klubu za <strong style="color:var(--gold)">15 Kč</strong>. Po zaplacení a potvrzení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje.
     </div>
     <div class="store-grid" id="storeGrid"></div>
   </div>
@@ -865,12 +865,12 @@
   <div class="modal">
     <h3 id="storeBuyTitle">🛒 Koupit pozadí</h3>
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--text-dim);line-height:1.5;margin-bottom:14px">
-      Cena: <strong style="color:var(--gold);font-size:1.15rem">100 Kč</strong><br>
-      Vyber způsob platby a po zaplacení potvrď:
+      Cena: <strong style="color:var(--gold);font-size:1.15rem">15 Kč</strong><br>
+      Zaplať a pak potvrď aktivaci:
     </div>
     <a id="storeBuyStripeLink" href="#" target="_blank" class="pay-btn pay-btn-stripe">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" fill="#fff" fill-opacity=".9"/></svg>
-      Zaplatit · Google Pay / Apple Pay / Karta
+      Zaplatit 15 Kč · Google Pay / Apple Pay / Karta
     </a>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeStoreBuyModal()">Zrušit</button>
@@ -969,7 +969,7 @@ function renderStore() {
         ${isActive ? '<span class="store-badge-active">✓ Aktivní</span>' : ''}
       </div>
       <button class="store-buy-btn" onclick="openStoreBuyModal('${bg.id}')" ${isActive ? 'disabled' : ''}>
-        ${isActive ? 'Aktivní' : '100 Kč'}
+        ${isActive ? 'Aktivní' : '15 Kč'}
       </button>
     </div>`;
   }).join('');
