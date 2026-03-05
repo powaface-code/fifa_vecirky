@@ -27,7 +27,7 @@ module.exports = async function (req, res) {
         price_data: {
           currency: 'czk',
           product_data: { name: `FIFA Večírky · ${BG_NAMES[bg]}` },
-          unit_amount: 10000, // 100 Kč v haléřích
+          unit_amount: 4900, // 49 Kč v haléřích
         },
         quantity: 1,
       }],

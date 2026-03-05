@@ -856,7 +856,7 @@
   <div class="container">
     <div class="section-title">🎨 Pozadí večírku</div>
     <div class="store-info-box">
-      Vyber téma svého klubu za <strong style="color:var(--gold)">100 Kč</strong>. Po zaplacení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje. Pokud někdo další aktivuje jiné pozadí, zobrazuje se všem nově aktivované.
+      Vyber téma svého klubu za <strong style="color:var(--gold)">49 Kč</strong>. Po zaplacení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje. Pokud někdo další aktivuje jiné pozadí, zobrazuje se všem nově aktivované.
     </div>
     <div class="store-grid" id="storeGrid"></div>
   </div>
@@ -901,16 +901,19 @@ function generateSchedule() {
     for (let j = i+1; j < PLAYERS.length; j++)
       pairs.push([PLAYERS[i].id, PLAYERS[j].id]);
 
-  // Náhodné pořadí s podmínkou: žádný hráč 3x za sebou
+  // Náhodné pořadí s podmínkou: žádný hráč 3x za sebou (včetně přechodu kola)
+  const N = pairs.length;
   for (let attempt = 0; attempt < 1000; attempt++) {
-    for (let i = pairs.length-1; i > 0; i--) {
+    for (let i = N-1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i+1));
       [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
     }
     let valid = true;
-    for (let i = 2; i < pairs.length; i++) {
+    for (let i = 0; i < N; i++) {
+      const prev1 = pairs[(i - 1 + N) % N];
+      const prev2 = pairs[(i - 2 + N) % N];
       for (const pid of pairs[i]) {
-        if (pairs[i-1].includes(pid) && pairs[i-2].includes(pid)) { valid = false; break; }
+        if (prev1.includes(pid) && prev2.includes(pid)) { valid = false; break; }
       }
       if (!valid) break;
     }
@@ -973,7 +976,7 @@ function renderStore() {
       </div>
       <div class="store-card-btns">
         <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
-          ${isActive ? 'Aktivní' : '100 Kč'}
+          ${isActive ? 'Aktivní' : '49 Kč'}
         </button>
       </div>
     </div>`;
