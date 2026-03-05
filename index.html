@@ -569,34 +569,48 @@
   }
   .back-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--white); letter-spacing: 2px; }
 
-  /* CLUB BACKGROUND THEMES */
+  /* CLUB BACKGROUND THEMES — sdílená pravidla */
+  body.bg-tom, body.bg-luke, body.bg-kubik, body.bg-jirik {
+    background-size: auto, auto, auto, auto, auto, cover;
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, center;
+    background-repeat: no-repeat;
+  }
+  /* Real Madrid — zatím placeholder pro všechny, vyměň url() za správný soubor */
   body.bg-tom {
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(245,200,66,0.32) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(255,255,255,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 0%, rgba(245,200,66,0.22) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255,255,255,0.08) 0%, transparent 50%),
       repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
-      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
+      url('background_real_madrid.jpg');
   }
   body.bg-luke {
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(0,85,164,0.5) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(227,6,19,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 0%, rgba(0,85,164,0.35) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(227,6,19,0.2) 0%, transparent 50%),
       repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
-      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
+      url('background_real_madrid.jpg'); /* ← vyměň za background_psg.jpg */
   }
   body.bg-kubik {
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(165,0,68,0.4) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(0,77,152,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 0%, rgba(165,0,68,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(0,77,152,0.25) 0%, transparent 50%),
       repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
-      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
+      url('background_real_madrid.jpg'); /* ← vyměň za background_barcelona.jpg */
   }
   body.bg-jirik {
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(200,16,46,0.45) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(200,16,46,0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 0%, rgba(200,16,46,0.35) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(200,16,46,0.15) 0%, transparent 50%),
       repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
-      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px);
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
+      url('background_real_madrid.jpg'); /* ← vyměň za background_liverpool.jpg */
   }
 
   /* STORE */
@@ -660,6 +674,22 @@
     touch-action: manipulation;
   }
   .store-buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .store-card-btns { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; align-items: flex-end; }
+  .preview-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    touch-action: manipulation;
+    white-space: nowrap;
+  }
+  .preview-btn.on { background: rgba(255,255,255,0.16); color: var(--white); border-color: rgba(255,255,255,0.3); }
   .store-info-box {
     background: rgba(245,200,66,0.07);
     border: 1px solid rgba(245,200,66,0.2);
@@ -911,10 +941,29 @@ const BACKGROUNDS = [
 ];
 
 let activeBg = null;
+let localPreview = null; // jen vizuální náhled, bez Firestore
 
 function applyBackground(bgId) {
+  // Pokud přichází reálné pozadí (z Firestore), přebije náhled
+  // Pokud přichází null a náhled je aktivní, necháme náhled být
+  if (!bgId && localPreview) return;
+  localPreview = null;
   document.body.classList.remove('bg-tom','bg-luke','bg-kubik','bg-jirik');
   if (bgId) document.body.classList.add('bg-' + bgId);
+}
+
+function previewBg(bgId) {
+  if (localPreview === bgId) {
+    // Toggle off — vrátit na reálné pozadí
+    localPreview = null;
+    document.body.classList.remove('bg-tom','bg-luke','bg-kubik','bg-jirik');
+    if (activeBg) document.body.classList.add('bg-' + activeBg);
+  } else {
+    localPreview = bgId;
+    document.body.classList.remove('bg-tom','bg-luke','bg-kubik','bg-jirik');
+    document.body.classList.add('bg-' + bgId);
+  }
+  renderStore();
 }
 
 function renderStore() {
@@ -923,6 +972,7 @@ function renderStore() {
   el.innerHTML = BACKGROUNDS.map(bg => {
     const p = getP(bg.id);
     const isActive = activeBg === bg.id;
+    const isPreviewing = localPreview === bg.id;
     return `<div class="store-card${isActive ? ' active-bg' : ''}">
       <div class="store-card-preview" style="background:${bg.bg}">
         ${badge(p, 42)}
@@ -932,9 +982,14 @@ function renderStore() {
         <div class="store-card-desc">Hráč: ${p.name}</div>
         ${isActive ? '<span class="store-badge-active">✓ Aktivní</span>' : ''}
       </div>
-      <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
-        ${isActive ? 'Aktivní' : '15 Kč'}
-      </button>
+      <div class="store-card-btns">
+        <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
+          ${isActive ? 'Aktivní' : '15 Kč'}
+        </button>
+        <button class="preview-btn${isPreviewing ? ' on' : ''}" onclick="previewBg('${bg.id}')">
+          ${isPreviewing ? '✕ zavřít' : '👁 náhled'}
+        </button>
+      </div>
     </div>`;
   }).join('');
 }
