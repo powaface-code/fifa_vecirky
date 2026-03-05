@@ -688,21 +688,6 @@
   }
   .store-buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .store-card-btns { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; align-items: flex-end; }
-  .preview-btn {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: var(--text-dim);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 5px 10px;
-    border-radius: 7px;
-    cursor: pointer;
-    touch-action: manipulation;
-    white-space: nowrap;
-  }
-  .preview-btn.on { background: rgba(255,255,255,0.16); color: var(--white); border-color: rgba(255,255,255,0.3); }
   .store-info-box {
     background: rgba(245,200,66,0.07);
     border: 1px solid rgba(245,200,66,0.2);
@@ -862,7 +847,7 @@
   <div class="container">
     <div class="section-title">🎨 Pozadí večírku</div>
     <div class="store-info-box">
-      Vyber téma svého klubu za <strong style="color:var(--gold)">15 Kč</strong>. Po zaplacení a potvrzení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje.
+      Vyber téma svého klubu za <strong style="color:var(--gold)">100 Kč</strong>. Po zaplacení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje. Pokud někdo další aktivuje jiné pozadí, zobrazuje se všem nově aktivované.
     </div>
     <div class="store-grid" id="storeGrid"></div>
   </div>
@@ -955,26 +940,11 @@ const BACKGROUNDS = [
 ];
 
 let activeBg = null;
-let localPreview = null; // jen vizuální náhled, bez Firestore
 
 function getBgLayer() { return document.getElementById('bg-layer'); }
 
 function applyBackground(bgId) {
-  if (!bgId && localPreview) return;
-  localPreview = null;
   getBgLayer().className = bgId ? 'bg-' + bgId : '';
-}
-
-function previewBg(bgId) {
-  const layer = getBgLayer();
-  if (localPreview === bgId) {
-    localPreview = null;
-    layer.className = activeBg ? 'bg-' + activeBg : '';
-  } else {
-    localPreview = bgId;
-    layer.className = 'bg-' + bgId;
-  }
-  renderStore();
 }
 
 function renderStore() {
@@ -983,7 +953,6 @@ function renderStore() {
   el.innerHTML = BACKGROUNDS.map(bg => {
     const p = getP(bg.id);
     const isActive = activeBg === bg.id;
-    const isPreviewing = localPreview === bg.id;
     return `<div class="store-card${isActive ? ' active-bg' : ''}">
       <div class="store-card-preview" style="background:${bg.bg}">
         ${badge(p, 42)}
@@ -995,10 +964,7 @@ function renderStore() {
       </div>
       <div class="store-card-btns">
         <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
-          ${isActive ? 'Aktivní' : '15 Kč'}
-        </button>
-        <button class="preview-btn${isPreviewing ? ' on' : ''}" onclick="previewBg('${bg.id}')">
-          ${isPreviewing ? '✕ zavřít' : '👁 náhled'}
+          ${isActive ? 'Aktivní' : '100 Kč'}
         </button>
       </div>
     </div>`;
