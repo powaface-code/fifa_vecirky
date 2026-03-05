@@ -1029,14 +1029,25 @@ function badge(p, sz=30) {
 }
 
 function renderSchedule() {
-  // Odehraní páry (nezáleží na pořadí domácí/hosté)
-  const played = new Set(matches.map(m => [m.p1, m.p2].sort().join('|')));
-  // První nedohraný zápas = aktuální
-  const currentIdx = SCHEDULE.findIndex(m => !played.has([m.p1, m.p2].sort().join('|')));
+  const N = SCHEDULE.length;
+  if (!N) { document.getElementById('scheduleList').innerHTML = ''; return; }
+
+  // Počet odehraných zápasů pro každý pár (nezáleží na pořadí domácí/hosté)
+  const pairCount = {};
+  matches.forEach(m => {
+    const key = [m.p1, m.p2].sort().join('|');
+    pairCount[key] = (pairCount[key] || 0) + 1;
+  });
+
+  const counts = SCHEDULE.map(m => pairCount[[m.p1, m.p2].sort().join('|')] || 0);
+  // Aktuální kolo = minimum přes všechny zápasy
+  const minCount = Math.min(...counts);
+  // Aktuální zápas = první, který v tomto kole ještě nebyl odehrán
+  const currentIdx = counts.findIndex(c => c === minCount);
 
   document.getElementById('scheduleList').innerHTML = SCHEDULE.map((m, i) => {
     const p1 = getP(m.p1), p2 = getP(m.p2);
-    const isPlayed  = played.has([m.p1, m.p2].sort().join('|'));
+    const isPlayed  = counts[i] > minCount; // odehráno v aktuálním kole
     const isCurrent = i === currentIdx;
     return `<div class="sched-item${isCurrent ? ' current' : isPlayed ? ' played' : ''}">
       <span class="sched-num">${i+1}</span>
