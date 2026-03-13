@@ -956,7 +956,7 @@ let activeBg = null;
 function getBgLayer() { return document.getElementById('bg-layer'); }
 
 function applyBackground(bgId) {
-  getBgLayer().className = bgId ? 'bg-' + bgId : '';
+  getBgLayer().className = 'bg-' + (bgId || 'tom');
 }
 
 function renderStore() {
