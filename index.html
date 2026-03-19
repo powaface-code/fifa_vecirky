@@ -856,7 +856,7 @@
   <div class="container">
     <div class="section-title">🎨 Pozadí večírku</div>
     <div class="store-info-box">
-      Vyber téma svého klubu za <strong style="color:var(--gold)">49 Kč</strong>. Po zaplacení se pozadí zobrazí všem hráčům v reálném čase. Po uzavření večírku se automaticky resetuje. Pokud někdo další aktivuje jiné pozadí, zobrazuje se všem nově aktivované.
+      Vyber si téma svého klubu. Pozadí se zobrazuje <strong style="color:var(--gold)">pouze tobě</strong> na tvém zařízení a pamatuje se i po zavření stránky.
     </div>
     <div class="store-grid" id="storeGrid"></div>
   </div>
@@ -951,12 +951,14 @@ const BACKGROUNDS = [
   { id:'jirik', name:'Liverpool',   clr:'#e84040', bg:'rgba(200,16,46,0.4)'  },
 ];
 
-let activeBg = null;
+let activeBg = localStorage.getItem('fifa_bg') || 'tom';
 
 function getBgLayer() { return document.getElementById('bg-layer'); }
 
 function applyBackground(bgId) {
-  getBgLayer().className = 'bg-' + (bgId || 'tom');
+  activeBg = bgId || 'tom';
+  localStorage.setItem('fifa_bg', activeBg);
+  getBgLayer().className = 'bg-' + activeBg;
 }
 
 function renderStore() {
@@ -975,49 +977,12 @@ function renderStore() {
         ${isActive ? '<span class="store-badge-active">✓ Aktivní</span>' : ''}
       </div>
       <div class="store-card-btns">
-        <button class="store-buy-btn" onclick="startPayment('${bg.id}')" ${isActive ? 'disabled' : ''}>
-          ${isActive ? 'Aktivní' : '49 Kč'}
+        <button class="store-buy-btn" onclick="applyBackground('${bg.id}')" ${isActive ? 'disabled' : ''}>
+          ${isActive ? 'Aktivní' : 'Vybrat'}
         </button>
       </div>
     </div>`;
   }).join('');
-}
-
-function startPayment(bgId) {
-  // Přesměruj na Vercel API → ta vytvoří Stripe session → Stripe platební brána
-  window.location.href = `${API_BASE}/api/create-checkout?bg=${bgId}`;
-}
-
-async function checkPaymentReturn() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('payment') !== 'ok') return;
-
-  const bg      = params.get('bg');
-  const session = params.get('session');
-
-  // Vyčisti URL (odstraň parametry)
-  window.history.replaceState({}, '', window.location.pathname);
-
-  if (!bg || !session) return;
-
-  showToast('⏳ Ověřuji platbu…');
-
-  try {
-    const res  = await fetch(`${API_BASE}/api/verify-payment?session=${encodeURIComponent(session)}&bg=${encodeURIComponent(bg)}`);
-    const data = await res.json();
-
-    if (data.ok) {
-      const p  = getP(bg);
-      const bgObj = BACKGROUNDS.find(b => b.id === bg);
-      await storeDoc.set({ activeBg: bg, purchasedBy: p?.name || bg, purchasedAt: Date.now() });
-      showToast(`🎨 ${bgObj?.name} pozadí aktivováno!`);
-      showTab('store');
-    } else {
-      showToast('❌ Platba nebyla ověřena');
-    }
-  } catch (e) {
-    showToast('❌ Chyba při ověření platby');
-  }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1218,7 +1183,6 @@ async function confirmCloseParty() {
     matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0}))
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
-  storeDoc.set({ activeBg: null });
   document.getElementById('partyDate').value = '';
   scheduleDoc.set({ pairs: generateSchedule() });
   showToast('🏁 Večírek archivován!');
@@ -1318,12 +1282,8 @@ function init() {
       scheduleDoc.set({ pairs: generateSchedule() });
     }
   });
-  storeDoc.onSnapshot(snap => {
-    activeBg = snap.exists ? (snap.data().activeBg || null) : null;
-    applyBackground(activeBg);
-    renderStore();
-  });
-  checkPaymentReturn();
+  applyBackground(activeBg);
+  renderStore();
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
   });
