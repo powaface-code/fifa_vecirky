@@ -1265,6 +1265,151 @@
   .match-item.team-match { padding-top: 14px; }
   .match-item.team-match .match-p { font-size: 0.78rem; }
   .match-item.team-match .pname { font-size: 0.78rem; }
+
+  /* LM FULL — text-based badge pro non-main týmy */
+  .team-text-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  /* LM FULL — pavouk vizualizace */
+  .clfull-rounds {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .clfull-round {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .clfull-round-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .clfull-matches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .clfull-matches.cols-1 { grid-template-columns: 1fr; }
+  .clfull-match {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-height: 64px;
+  }
+  .clfull-match.unplayed {
+    border: 1px dashed rgba(245,200,66,0.35);
+    background: rgba(245,200,66,0.05);
+  }
+  .clfull-match.current {
+    border-color: #00e676;
+    box-shadow: 0 0 8px rgba(0,230,118,0.35);
+  }
+  .clfull-match.tied {
+    border-color: rgba(214,59,59,0.5);
+    background: rgba(214,59,59,0.08);
+  }
+  .clfull-match.pending {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .clfull-match:active { background: rgba(245,200,66,0.1); }
+  .clfull-side {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    min-width: 0;
+  }
+  .clfull-side .team-name-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .clfull-side .team-name-cell .tname {
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .clfull-side .team-name-cell .townr {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    display: block;
+  }
+  .clfull-side .clf-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.05rem;
+    color: var(--text);
+    min-width: 18px;
+    text-align: right;
+  }
+  .clfull-side .clf-score.dash { color: var(--text-dim); }
+  .clfull-side.winner .team-name-cell .tname { color: var(--gold); }
+  .clfull-side.loser .team-name-cell .tname { color: var(--text-dim); text-decoration: line-through; opacity: 0.7; }
+  .clfull-tie-warn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem;
+    color: var(--red);
+    font-weight: 700;
+    text-align: center;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(214,59,59,0.3);
+  }
+  .clfull-final .clfull-match {
+    background: linear-gradient(135deg, rgba(245,200,66,0.1), rgba(245,200,66,0.03));
+    border-color: rgba(245,200,66,0.3);
+    min-height: 80px;
+  }
+  .clfull-round-info {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  /* 2v2/cl_full team display ve formuláři */
+  .clf-form-info {
+    background: rgba(245,200,66,0.07);
+    border: 1px solid rgba(245,200,66,0.25);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
 </style>
 </head>
 <body>
@@ -1555,7 +1700,42 @@ const TOURNAMENT_TYPES = {
   cl_full:  { name: 'Liga mistrů Full',       icon: '🏆' },
   team2v2:  { name: '2v2 týmový režim',       icon: '👥' },
 };
-const SUPPORTED_TYPES = ['cycle3', 'cycle4', 'cl_basic', 'team2v2']; // Fáze 1+2+3
+const SUPPORTED_TYPES = ['cycle3', 'cycle4', 'cl_basic', 'team2v2', 'cl_full']; // Fáze 1-4
+
+// Non-main týmy pro LM Full (12 ks)
+const NON_MAIN_TEAMS = [
+  { id: 'arsenal',    name: 'Arsenal',          initials: 'ARS', clr: '#ef0107' },
+  { id: 'bayern',     name: 'Bayern Mnichov',   initials: 'BAY', clr: '#dc052d' },
+  { id: 'chelsea',    name: 'Chelsea',          initials: 'CHE', clr: '#034694' },
+  { id: 'mancity',    name: 'Manchester City',  initials: 'MCI', clr: '#6cabdd' },
+  { id: 'inter',      name: 'Inter Milán',      initials: 'INT', clr: '#010e80' },
+  { id: 'atletico',   name: 'Atlético Madrid',  initials: 'ATM', clr: '#cb3524' },
+  { id: 'dortmund',   name: 'Borussia Dortmund',initials: 'BVB', clr: '#fde100' },
+  { id: 'newcastle',  name: 'Newcastle',        initials: 'NEW', clr: '#241f20' },
+  { id: 'leverkusen', name: 'Bayer Leverkusen', initials: 'LEV', clr: '#e32221' },
+  { id: 'juventus',   name: 'Juventus',         initials: 'JUV', clr: '#000000' },
+  { id: 'acmilan',    name: 'AC Milán',         initials: 'MIL', clr: '#fb090b' },
+  { id: 'tottenham',  name: 'Tottenham',        initials: 'TOT', clr: '#132257' },
+];
+
+function getTeam(teamId) {
+  // Main team = player ID
+  const player = PLAYERS.find(p => p.id === teamId);
+  if (player) return { id: teamId, name: player.club, isMain: true, ownerId: player.id };
+  const team = NON_MAIN_TEAMS.find(t => t.id === teamId);
+  if (team) return { ...team, isMain: false };
+  return null;
+}
+
+function teamBadgeHtml(teamId, size = 28) {
+  const t = getTeam(teamId);
+  if (!t) return '';
+  if (t.isMain) {
+    const player = PLAYERS.find(p => p.id === teamId);
+    return `<img class="badge" src="${player.logo}?v=3" width="${size}" height="${size}" alt="${player.club}" style="width:${size}px;height:${size}px">`;
+  }
+  return `<div class="team-text-badge" style="width:${size}px;height:${size}px;background:${t.clr};font-size:${Math.round(size*0.36)}px">${t.initials}</div>`;
+}
 
 // Cyklický rozpis — každý s každým, anti-consecutive (max 2 v řadě s wrap-around)
 function generateCycleSchedule(playerIds) {
@@ -1675,6 +1855,77 @@ function generate2v2Schedule(playerIds) {
   return result;
 }
 
+// ── LM FULL ──────────────────────────────────────────────────────────────────
+// Bracket struktura (16 slotů, 0-indexed):
+// R16 matches: [0,1], [2,3], [4,5], [6,7], [8,9], [10,11], [12,13], [14,15]
+// QF: winner(R16#0) vs winner(R16#1), atd.
+// Main týmy v slotech 0, 4, 8, 12 (4 kvadranty), aby se mains potkali až v SF
+// Tom=0 a Luke=4 by se potkali v SF (s1); Kubík=8 a Jiřík=12 v s2
+
+function generateClFullR16(playerIds) {
+  // Náhodně přiraď hráče ke kvadrantům (sloty 0, 4, 8, 12)
+  const mainAssignment = [...playerIds];
+  for (let i = mainAssignment.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [mainAssignment[i], mainAssignment[j]] = [mainAssignment[j], mainAssignment[i]];
+  }
+  const mainSlotIdx = [0, 4, 8, 12];
+
+  // Zamíchej non-main týmy do zbývajících 12 slotů
+  const nonMainTeams = NON_MAIN_TEAMS.map(t => t.id);
+  for (let i = nonMainTeams.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [nonMainTeams[i], nonMainTeams[j]] = [nonMainTeams[j], nonMainTeams[i]];
+  }
+
+  // Inicializuj 16 slotů
+  const slots = new Array(16);
+
+  // Place mains
+  mainAssignment.forEach((playerId, qIdx) => {
+    slots[mainSlotIdx[qIdx]] = { teamId: playerId, ownerId: playerId, isMain: true };
+  });
+
+  // Place non-mains
+  // Pro každý kvadrant (4 mains × 3 slotů): owners = 3 ostatní hráči, každý 1 slot
+  let teamIdx = 0;
+  mainAssignment.forEach((ownerId, qIdx) => {
+    const otherPlayers = playerIds.filter(p => p !== ownerId);
+    const shuffled = [...otherPlayers];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const qStart = mainSlotIdx[qIdx];
+    for (let pos = 1; pos <= 3; pos++) {
+      slots[qStart + pos] = {
+        teamId: nonMainTeams[teamIdx],
+        ownerId: shuffled[pos - 1],
+        isMain: false,
+      };
+      teamIdx++;
+    }
+  });
+
+  return slots;
+}
+
+function buildClFullSchedule(slots) {
+  // Z 16 slotů vygeneruj 8 R16 zápasů
+  const schedule = [];
+  for (let i = 0; i < 16; i += 2) {
+    const a = slots[i], b = slots[i+1];
+    schedule.push({
+      phase: 'r16',
+      matchIdx: i / 2,
+      slotA: i, slotB: i + 1,
+      p1: a.ownerId, p2: b.ownerId,
+      t1: a.teamId, t2: b.teamId,
+    });
+  }
+  return schedule;
+}
+
 // Generátor turnaje podle typu
 function buildTournament(type, playerIds) {
   const base = { type, players: playerIds, startedAt: Date.now() };
@@ -1687,7 +1938,16 @@ function buildTournament(type, playerIds) {
   if (type === 'team2v2') {
     return { ...base, schedule: generate2v2Schedule(playerIds) };
   }
-  // TODO: Fáze 4 (cl_full)
+  if (type === 'cl_full') {
+    const slots = generateClFullR16(playerIds);
+    const schedule = buildClFullSchedule(slots);
+    // Track historie vlastníků: { teamId: [playerIds] }
+    const ownershipHistory = {};
+    slots.forEach(s => {
+      ownershipHistory[s.teamId] = [s.ownerId];
+    });
+    return { ...base, schedule, slots, ownershipHistory, state: { stage: 'r16' } };
+  }
   return { ...base, schedule: generateCycleSchedule(playerIds) };
 }
 
@@ -1990,6 +2250,8 @@ function renderSchedule() {
   } else if (t.type === 'team2v2') {
     renderTeam2v2Schedule();
     if (bracket) bracket.innerHTML = '';
+  } else if (t.type === 'cl_full') {
+    renderClFullSchedule();
   } else {
     renderCycleSchedule();
     if (bracket) bracket.innerHTML = '';
@@ -2317,13 +2579,266 @@ function setPendingMatch2v2(scheduleItem, idx) {
   }, 50);
 }
 
+// ── LM FULL render ───────────────────────────────────────────────────────────
+function renderClFullSchedule() {
+  // Hide standard schedule list, use bracket
+  document.getElementById('scheduleList').innerHTML = '';
+  renderClFullBracket();
+}
+
+function findClFullMatch(phase, matchIdx) {
+  return matches.find(m => m.phase === phase && m.matchIdx === matchIdx);
+}
+
+function clFullRoundWinners(phase) {
+  // Vrátí pole { teamId, ownerId, score } pro vítěze daného kola
+  const t = currentTournament;
+  if (!t) return [];
+  const phaseItems = (t.schedule || []).filter(s => s.phase === phase).sort((a,b) => a.matchIdx - b.matchIdx);
+  return phaseItems.map(item => {
+    const m = findClFullMatch(phase, item.matchIdx);
+    if (!m || m.g1 === m.g2) return null; // remíza = nedohrané
+    const winnerOwner = m.g1 > m.g2 ? m.p1 : m.p2;
+    const winnerTeam  = m.g1 > m.g2 ? m.t1 : m.t2;
+    const loserOwner  = m.g1 > m.g2 ? m.p2 : m.p1;
+    const loserTeam   = m.g1 > m.g2 ? m.t2 : m.t1;
+    return { winnerOwner, winnerTeam, loserOwner, loserTeam };
+  });
+}
+
+function renderClFullBracket() {
+  const el = document.getElementById('bracketContainer');
+  if (!el || !currentTournament || currentTournament.type !== 'cl_full') {
+    if (el) el.innerHTML = '';
+    return;
+  }
+  const schedule = currentTournament.schedule || [];
+  const r16Items = schedule.filter(s => s.phase === 'r16');
+  const qfItems  = schedule.filter(s => s.phase === 'qf');
+  const sfItems  = schedule.filter(s => s.phase === 'sf');
+  const fItems   = schedule.filter(s => s.phase === 'f');
+
+  function renderRoundMatches(items, phase) {
+    const playedItems = items.map(item => findClFullMatch(phase, item.matchIdx));
+    // Najdi aktuální (první neodehraný)
+    const currentIdx = playedItems.findIndex(m => !m);
+    return items.map((item, idx) => {
+      const m = playedItems[idx];
+      const played = !!m;
+      const tie = played && m.g1 === m.g2;
+      const win1 = played && !tie && m.g1 > m.g2;
+      const win2 = played && !tie && m.g2 > m.g1;
+      const isCurrent = idx === currentIdx;
+      const cls = played
+        ? (tie ? 'tied' : '')
+        : (isCurrent ? 'unplayed current' : 'unplayed');
+      const p1 = getP(item.p1), p2 = getP(item.p2);
+      const t1 = getTeam(item.t1), t2 = getTeam(item.t2);
+      return `<div class="clfull-match ${cls}" onclick="clickClFullMatch('${phase}', ${item.matchIdx})">
+        <div class="clfull-side ${win1 ? 'winner' : (win2 ? 'loser' : '')}">
+          ${teamBadgeHtml(item.t1, 22)}
+          <span class="team-name-cell">
+            <span class="tname">${t1?.name || '?'}</span>
+            <span class="townr">${p1?.name || '?'}</span>
+          </span>
+          <span class="clf-score ${played ? '' : 'dash'}">${played ? m.g1 : '—'}</span>
+        </div>
+        <div class="clfull-side ${win2 ? 'winner' : (win1 ? 'loser' : '')}">
+          ${teamBadgeHtml(item.t2, 22)}
+          <span class="team-name-cell">
+            <span class="tname">${t2?.name || '?'}</span>
+            <span class="townr">${p2?.name || '?'}</span>
+          </span>
+          <span class="clf-score ${played ? '' : 'dash'}">${played ? m.g2 : '—'}</span>
+        </div>
+        ${tie ? '<div class="clfull-tie-warn">⚠️ Remíza — klikni a uprav</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderRound(items, phase, title, colsClass) {
+    if (!items.length) {
+      return `<div class="clfull-round">
+        <div class="clfull-round-title">${title}</div>
+        <div class="clfull-round-info">— čeká na předchozí kolo —</div>
+      </div>`;
+    }
+    return `<div class="clfull-round">
+      <div class="clfull-round-title">${title}</div>
+      <div class="clfull-matches ${colsClass}">${renderRoundMatches(items, phase)}</div>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="section-title">🏆 Pavouk 16 týmů</div>
+    <div class="clfull-rounds">
+      ${renderRound(r16Items, 'r16', '🏟️ Osmifinále', '')}
+      ${renderRound(qfItems, 'qf',  '⚽ Čtvrtfinále', '')}
+      ${renderRound(sfItems, 'sf',  '🥈 Semifinále', '')}
+      <div class="clfull-final">${renderRound(fItems, 'f', '🏆 Finále', 'cols-1')}</div>
+    </div>
+  `;
+}
+
+function clickClFullMatch(phase, matchIdx) {
+  const item = (currentTournament?.schedule || []).find(s => s.phase === phase && s.matchIdx === matchIdx);
+  if (!item) return;
+  const existing = findClFullMatch(phase, matchIdx);
+  if (existing) {
+    openEdit(existing.id);
+  } else {
+    setPendingMatchClFull(item, phase, matchIdx);
+  }
+}
+
+function setPendingMatchClFull(item, phase, matchIdx) {
+  pendingMatch = {
+    phase,
+    p1: item.p1,
+    p2: item.p2,
+    t1: item.t1,
+    t2: item.t2,
+    matchIdx,
+    label: phaseLabel(phase),
+  };
+  // Hide 1v1 select, render team display
+  document.getElementById('formPlayers1v1').style.display = 'none';
+  const p1 = getP(item.p1), p2 = getP(item.p2);
+  const t1 = getTeam(item.t1), t2 = getTeam(item.t2);
+  document.getElementById('formPlayers2v2').innerHTML = `
+    <div class="clf-form-info">Klikl/a jsi na ${phaseLabel(phase)}</div>
+    <div class="team-display">
+      <div class="team-side">
+        <div class="team-club-badge">${teamBadgeHtml(item.t1, 36)}</div>
+        <div class="team-names">${t1?.name || '?'}</div>
+        <div class="team-clubname">${p1?.name || '?'}</div>
+      </div>
+      <div class="vs-mid" style="font-size:1.4rem">VS</div>
+      <div class="team-side">
+        <div class="team-club-badge">${teamBadgeHtml(item.t2, 36)}</div>
+        <div class="team-names">${t2?.name || '?'}</div>
+        <div class="team-clubname">${p2?.name || '?'}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('formPlayers2v2').style.display = '';
+  document.getElementById('formScoreLabelA').textContent = `Góly: ${t1?.name || '?'}`;
+  document.getElementById('formScoreLabelB').textContent = `Góly: ${t2?.name || '?'}`;
+  renderPendingMatchBadge();
+  setTimeout(() => {
+    document.querySelector('#view-current .form-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+
 // ── ADVANCE TOURNAMENT — generování dalších fází ─────────────────────────────
 async function checkTournamentProgress() {
   if (!currentTournament) return;
   if (currentTournament.type === 'cl_basic') {
     await advanceClBasic();
   }
-  // Fáze 4: cl_full
+  if (currentTournament.type === 'cl_full') {
+    await advanceClFull();
+  }
+}
+
+async function advanceClFull() {
+  if (advanceInProgress) return;
+  const t = currentTournament;
+  if (!t || t.type !== 'cl_full') return;
+  const schedule = [...(t.schedule || [])];
+
+  // Definice kol: každé má číslo zápasů + indexy předchozího kola
+  const rounds = [
+    { phase: 'r16', total: 8, next: 'qf' },
+    { phase: 'qf',  total: 4, next: 'sf' },
+    { phase: 'sf',  total: 2, next: 'f' },
+    { phase: 'f',   total: 1, next: null },
+  ];
+
+  for (const r of rounds) {
+    if (!r.next) break;
+    // Je toto kolo kompletní?
+    const items = schedule.filter(s => s.phase === r.phase);
+    if (items.length === 0) continue;
+    if (items.length < r.total) continue;
+    const winners = clFullRoundWinners(r.phase);
+    if (winners.some(w => !w)) return; // něco neukončeno (remíza nebo neodehráno)
+
+    // Existuje další kolo už?
+    const nextExists = schedule.some(s => s.phase === r.next);
+    if (nextExists) continue;
+
+    // Vygeneruj další kolo
+    advanceInProgress = true;
+    try {
+      // 8 winners (R16) → 4 QF matches
+      // 4 winners (QF) → 2 SF matches
+      // 2 winners (SF) → 1 F match
+      const nextMatches = [];
+      // Spáruj winners do dalšího kola: winner(0) vs winner(1), winner(2) vs winner(3), atd.
+      for (let i = 0; i < winners.length; i += 2) {
+        const w1 = winners[i], w2 = winners[i+1];
+        nextMatches.push({ teamA: w1.winnerTeam, teamB: w2.winnerTeam });
+      }
+
+      // Přiřaď non-main týmům nové vlastníky (rotace, žádný hráč neopakuje stejný tým)
+      const ownership = { ...(t.ownershipHistory || {}) };
+      // Identifikuj non-main týmy v dalším kole
+      const nextTeams = nextMatches.flatMap(m => [m.teamA, m.teamB]);
+      const nextNonMains = nextTeams.filter(tid => !PLAYERS.find(p => p.id === tid));
+      const nextMains    = nextTeams.filter(tid =>  PLAYERS.find(p => p.id === tid));
+
+      // Owner pro non-main: hráč, který tým ještě neměl + co nejvíc vyrovnaně přes round
+      const playerIds = t.players;
+      const newOwners = {};
+      // Main týmy mají fixní owners
+      nextMains.forEach(tid => { newOwners[tid] = tid; });
+
+      // Greedy assignment pro non-mains
+      const counts = {};
+      playerIds.forEach(p => counts[p] = 0);
+      // Mains se počítají do count
+      nextMains.forEach(tid => { counts[tid] = (counts[tid] || 0) + 1; });
+
+      const shuffledNonMains = [...nextNonMains];
+      for (let i = shuffledNonMains.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledNonMains[i], shuffledNonMains[j]] = [shuffledNonMains[j], shuffledNonMains[i]];
+      }
+      for (const tid of shuffledNonMains) {
+        const history = ownership[tid] || [];
+        const eligible = playerIds.filter(p => !history.includes(p));
+        const pool = eligible.length > 0 ? eligible : playerIds;
+        const minCount = Math.min(...pool.map(p => counts[p]));
+        const tied = pool.filter(p => counts[p] === minCount);
+        const chosen = tied[Math.floor(Math.random() * tied.length)];
+        newOwners[tid] = chosen;
+        counts[chosen]++;
+        ownership[tid] = [...(ownership[tid] || []), chosen];
+      }
+
+      // Vytvoř schedule items pro nové kolo
+      nextMatches.forEach((nm, idx) => {
+        const ownerA = newOwners[nm.teamA];
+        const ownerB = newOwners[nm.teamB];
+        schedule.push({
+          phase: r.next,
+          matchIdx: idx,
+          p1: ownerA, p2: ownerB,
+          t1: nm.teamA, t2: nm.teamB,
+        });
+      });
+
+      // Update tournament
+      await tournamentDoc.set({ ...t, schedule, ownershipHistory: ownership, state: { stage: r.next } });
+      await scheduleDoc.set({ pairs: schedule });
+      const labels = { qf: 'Čtvrtfinále', sf: 'Semifinále', f: 'Finále' };
+      showToast(`🏆 ${labels[r.next]} vygenerováno!`);
+    } finally {
+      advanceInProgress = false;
+    }
+    return;
+  }
 }
 
 let advanceInProgress = false;
@@ -2452,7 +2967,7 @@ function setScore(gid, val, setter) {
 }
 
 async function saveMatch() {
-  // 2v2 mode: pendingMatch má phase='team2v2' s teamA/teamB
+  // 2v2 mode
   if (pendingMatch?.phase === 'team2v2') {
     await matchesCol.add({
       phase: 'team2v2',
@@ -2468,9 +2983,33 @@ async function saveMatch() {
     return;
   }
 
-  // Pro 2v2 turnaj bez pendingMatch nepovolíme manuální uložení
+  // LM Full mode: r16, qf, sf, f
+  if (pendingMatch && ['r16','qf','sf','f'].includes(pendingMatch.phase)) {
+    await matchesCol.add({
+      phase: pendingMatch.phase,
+      matchIdx: pendingMatch.matchIdx,
+      p1: pendingMatch.p1,
+      p2: pendingMatch.p2,
+      t1: pendingMatch.t1,
+      t2: pendingMatch.t2,
+      g1: sF1, g2: sF2,
+      ts: Date.now(),
+    });
+    sF1=0; sF2=0;
+    buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
+    clearPendingMatch();
+    showToast('✅ Zápas uložen!');
+    await checkTournamentProgress();
+    return;
+  }
+
+  // Pro 2v2 / cl_full turnaj bez pendingMatch nepovolíme manuální uložení
   if (currentTournament?.type === 'team2v2') {
     alert('Pro 2v2 klikni nejdříve na konkrétní zápas v rozlosování.');
+    return;
+  }
+  if (currentTournament?.type === 'cl_full') {
+    alert('Pro Ligu mistrů Full klikni nejdříve na konkrétní zápas v pavouku.');
     return;
   }
 
@@ -2523,6 +3062,33 @@ function openEdit(id) {
   if (!m) return;
   editId=id; sE1=m.g1; sE2=m.g2;
   buildScore('esg1',m.g1,'e1'); buildScore('esg2',m.g2,'e2');
+  // LM Full match
+  if (m.t1 && m.t2 && ['r16','qf','sf','f'].includes(m.phase)) {
+    document.getElementById('edit1v1Fields').style.display = 'none';
+    const p1 = getP(m.p1), p2 = getP(m.p2);
+    const t1 = getTeam(m.t1), t2 = getTeam(m.t2);
+    document.getElementById('edit2v2Fields').innerHTML = `
+      <div class="clf-form-info">${phaseLabel(m.phase)}</div>
+      <div class="team-display">
+        <div class="team-side">
+          <div class="team-club-badge">${teamBadgeHtml(m.t1, 32)}</div>
+          <div class="team-names">${t1?.name || '?'}</div>
+          <div class="team-clubname">${p1?.name || '?'}</div>
+        </div>
+        <div class="vs-mid" style="font-size:1.4rem">VS</div>
+        <div class="team-side">
+          <div class="team-club-badge">${teamBadgeHtml(m.t2, 32)}</div>
+          <div class="team-names">${t2?.name || '?'}</div>
+          <div class="team-clubname">${p2?.name || '?'}</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('edit2v2Fields').style.display = '';
+    document.getElementById('editScoreLabelA').textContent = `Góly: ${t1?.name?.split(' ')[0] || '?'}`;
+    document.getElementById('editScoreLabelB').textContent = `Góly: ${t2?.name?.split(' ')[0] || '?'}`;
+    document.getElementById('editModal').classList.add('open');
+    return;
+  }
   if (m.phase === 'team2v2') {
     // 2v2 mode: read-only team display
     document.getElementById('edit1v1Fields').style.display = 'none';
@@ -2565,6 +3131,13 @@ function closeModal() {
 }
 async function confirmEdit() {
   const m = matches.find(x => x.id === editId);
+  // LM Full: pouze score, týmy + matchIdx jsou ze schedule
+  if (m && m.t1 && m.t2 && ['r16','qf','sf','f'].includes(m.phase)) {
+    await matchesCol.doc(editId).update({g1:sE1, g2:sE2});
+    closeModal();
+    await checkTournamentProgress();
+    return;
+  }
   if (m?.phase === 'team2v2') {
     // 2v2: pouze score, týmy jsou ze schedule
     await matchesCol.doc(editId).update({g1:sE1, g2:sE2});
@@ -2677,6 +3250,19 @@ function serializeMatchForArchive(m) {
       phase: 'team2v2',
       teamA: m.teamA || null,
       teamB: m.teamB || null,
+      g1: m.g1 || 0,
+      g2: m.g2 || 0,
+      ts: m.ts || 0,
+    };
+  }
+  if (['r16','qf','sf','f'].includes(m.phase)) {
+    return {
+      phase: m.phase,
+      matchIdx: m.matchIdx ?? 0,
+      p1: m.p1 || null,
+      p2: m.p2 || null,
+      t1: m.t1 || null,
+      t2: m.t2 || null,
       g1: m.g1 || 0,
       g2: m.g2 || 0,
       ts: m.ts || 0,
@@ -2815,6 +3401,104 @@ function renderStandardStandingsHTML() {
   </div>`;
 }
 
+// LM Full — placements podle main týmu hráče (nejdál v turnaji)
+function computeClFullPlacements(party) {
+  const ms = party.matches || [];
+  const players = partyPlayers(party);
+  if (!players.length) return null;
+  // Pro každého hráče: kde jejich MAIN tým skončil
+  const placements = {};
+  for (const pid of players) {
+    // Najdi všechny zápasy, kde hraje TÝM pid (main = clubId == player id)
+    const playerTeamMatches = ms.filter(m =>
+      ['r16','qf','sf','f'].includes(m.phase) && (m.t1 === pid || m.t2 === pid)
+    );
+    if (!playerTeamMatches.length) continue;
+    // Najdi poslední fázi, kterou main hráč hrál
+    const phaseOrder = ['r16','qf','sf','f'];
+    let lastPhase = null;
+    let won = false;
+    for (const phase of phaseOrder) {
+      const ph = playerTeamMatches.find(m => m.phase === phase);
+      if (!ph) continue;
+      lastPhase = phase;
+      const tieOrUndone = !ph || ph.g1 === ph.g2;
+      const won1 = ph.t1 === pid && ph.g1 > ph.g2;
+      const won2 = ph.t2 === pid && ph.g2 > ph.g1;
+      won = won1 || won2;
+      if (!won) break; // prohrál na této fázi
+    }
+    if (!lastPhase) continue;
+    // Mapping: r16=8th, qf=quarter, sf=semi, f=runner-up nebo champion
+    let placement;
+    if (lastPhase === 'f' && won) placement = 'champion';
+    else if (lastPhase === 'f' && !won) placement = 'runner';
+    else if (lastPhase === 'sf' && !won) placement = 'semi';
+    else if (lastPhase === 'qf' && !won) placement = 'quarter';
+    else if (lastPhase === 'r16' && !won) placement = 'r16';
+    else placement = 'r16';
+    placements[pid] = placement;
+  }
+  return placements;
+}
+
+function renderClFullPlacementsHTML(parties, playerIds) {
+  const tally = {};
+  playerIds.forEach(id => tally[id] = { id, champion:0, runner:0, semi:0, quarter:0, r16:0, total:0 });
+  let incomplete = 0;
+  parties.forEach(p => {
+    const places = computeClFullPlacements(p);
+    if (!places || !Object.keys(places).length) { incomplete++; return; }
+    // Zkontroluj, jestli je turnaj dokončen (existuje champion)
+    const champCount = Object.values(places).filter(v => v === 'champion').length;
+    if (champCount === 0) { incomplete++; return; }
+    Object.entries(places).forEach(([pid, place]) => {
+      if (!tally[pid]) tally[pid] = { id: pid, champion:0, runner:0, semi:0, quarter:0, r16:0, total:0 };
+      tally[pid][place]++;
+      tally[pid].total++;
+    });
+  });
+  const rows = Object.values(tally)
+    .filter(r => r.total > 0)
+    .sort((a,b) => b.champion - a.champion || b.runner - a.runner || b.semi - a.semi || b.total - a.total);
+
+  if (!rows.length) {
+    return `<div class="empty-state">Žádný dokončený LM Full turnaj.${incomplete ? ` (${incomplete} rozehraných)` : ''}</div>`;
+  }
+
+  const rc = ['r1','r2','r3','r4'];
+  const tbody = rows.map((r, i) => {
+    const p = getP(r.id);
+    if (!p) return '';
+    return `<tr>
+      <td><span class="rank-badge ${rc[i] || ''}">${i+1}</span></td>
+      <td><div class="player-cell">${badge(p,26)}<div>
+        <div class="player-name">${p.name} <span style="color:var(--text-dim);font-weight:400;font-size:0.75rem">(${p.club})</span></div>
+      </div></div></td>
+      <td style="color:#f5c842;font-weight:700">${r.champion}</td>
+      <td style="color:#c8c8c8">${r.runner}</td>
+      <td style="color:#cd7f32">${r.semi}</td>
+      <td style="color:var(--text-dim)">${r.quarter}</td>
+      <td style="color:var(--text-dim)">${r.r16}</td>
+      <td class="pts">${r.total}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
+      <table class="standings-table">
+        <thead><tr>
+          <th>#</th><th>Hráč</th>
+          <th title="Vítěz">🏆</th><th title="Finalista">🥈</th><th title="Semifinalista">🥉</th>
+          <th title="Čtvrtfinalista">4F</th><th title="Vypadl v R16">R16</th><th title="Celkem">Σ</th>
+        </tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+    ${incomplete > 0 ? `<div style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);font-size:0.8rem;margin-top:6px;text-align:center">⚠️ ${incomplete} turnaj/e bez dokončeného finále</div>` : ''}
+  `;
+}
+
 function renderHistory() {
   // POUZE zápasy z vybraného typu turnaje — žádné mixování
   const filtered = parties.filter(p => partyType(p) === historyFilter);
@@ -2828,17 +3512,19 @@ function renderHistory() {
   const lblEl = document.getElementById('cumulativeFilterLabel');
   const tinfo = TOURNAMENT_TYPES[historyFilter];
   if (lblEl) {
-    if (historyFilter === 'cl_basic') {
+    if (historyFilter === 'cl_basic' || historyFilter === 'cl_full') {
       lblEl.textContent = `🏆 ${tinfo.name} — umístění`;
     } else {
       lblEl.textContent = `${tinfo?.icon || '🏆'} ${tinfo?.name || 'Tabulka'}`;
     }
   }
 
-  // Hlavní obsah — placements pro cl_basic, jinak standardní tabulka
+  // Hlavní obsah — placements pro cl_basic / cl_full, jinak standardní tabulka
   const mainEl = document.getElementById('historyMainContent');
   if (historyFilter === 'cl_basic') {
     mainEl.innerHTML = renderClBasicPlacementsHTML(filtered, playerIds);
+  } else if (historyFilter === 'cl_full') {
+    mainEl.innerHTML = renderClFullPlacementsHTML(filtered, playerIds);
   } else {
     mainEl.innerHTML = renderStandardStandingsHTML();
     const allMatches = filtered.flatMap(p => p.matches||[]);
@@ -2939,6 +3625,22 @@ function renderMatches() {
         <div class="match-p home">${badge(clubA,22)}<span class="pname">${pA1.name}+${pA2?.name}</span></div>
         <div class="match-score-box">${m.g1} : ${m.g2}</div>
         <div class="match-p away">${badge(clubB,22)}<span class="pname">${pB1.name}+${pB2?.name}</span></div>
+        <div class="match-actions">
+          <button class="abtn edit" onclick="openEdit('${m.id}')">✏️</button>
+          <button class="abtn del" onclick="deleteMatch('${m.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }
+    // LM Full match (má t1/t2 = team IDs)
+    if (m.t1 && m.t2 && ['r16','qf','sf','f'].includes(m.phase)) {
+      const p1 = getP(m.p1), p2 = getP(m.p2);
+      const t1 = getTeam(m.t1), t2 = getTeam(m.t2);
+      if (!p1 || !p2) return '';
+      return `<div class="match-item team-match">
+        <div class="match-phase-tag">${phaseLabel(m.phase)}</div>
+        <div class="match-p home">${teamBadgeHtml(m.t1, 22)}<span class="pname">${t1?.name?.split(' ')[0] || '?'} <span style="color:var(--text-dim);font-size:0.7rem">(${p1.name})</span></span></div>
+        <div class="match-score-box">${m.g1} : ${m.g2}</div>
+        <div class="match-p away">${teamBadgeHtml(m.t2, 22)}<span class="pname">${t2?.name?.split(' ')[0] || '?'} <span style="color:var(--text-dim);font-size:0.7rem">(${p2.name})</span></span></div>
         <div class="match-actions">
           <button class="abtn edit" onclick="openEdit('${m.id}')">✏️</button>
           <button class="abtn del" onclick="deleteMatch('${m.id}')">🗑️</button>
