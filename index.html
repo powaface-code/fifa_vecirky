@@ -1111,6 +1111,21 @@
     border-top: none;
     border: 1px solid rgba(214,59,59,0.4);
   }
+  .bracket-match.tied-final {
+    border-color: rgba(214,59,59,0.5);
+    background: rgba(214,59,59,0.08);
+    box-shadow: 0 0 8px rgba(214,59,59,0.2);
+  }
+  .bracket-tie-warning {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--red);
+    text-align: center;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(214,59,59,0.35);
+    margin-top: 4px;
+  }
   .bracket-title {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 0.85rem;
@@ -2009,7 +2024,10 @@ function renderClBasicBracket(semiItems, thirdItem, finalItem) {
     const tie = played && m.g1 === m.g2;
     const win1 = played && !tie && m.g1 > m.g2;
     const win2 = played && !tie && m.g2 > m.g1;
-    return `<div class="bracket-match clickable${played ? '' : ' current'}"
+    const tieWarning = tie
+      ? '<div class="bracket-tie-warning">⚠️ REMÍZA — klikni a uprav ✏️</div>'
+      : '';
+    return `<div class="bracket-match clickable${played ? '' : ' current'}${tie ? ' tied-final' : ''}"
       onclick="clickScheduleSlot('${schedItem.p1}','${schedItem.p2}','${phase}','${label}')">
       <div class="bracket-mlabel">${label}</div>
       <div class="bracket-line">
@@ -2020,6 +2038,7 @@ function renderClBasicBracket(semiItems, thirdItem, finalItem) {
         <span class="bname ${win2 ? 'winner' : (win1 ? 'loser' : '')}">${p2?.name || '?'}</span>
         <span class="bscore ${played ? '' : 'dash'}">${played ? m.g2 : '—'}</span>
       </div>
+      ${tieWarning}
     </div>`;
   }
 
