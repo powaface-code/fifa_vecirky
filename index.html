@@ -1127,17 +1127,16 @@
 <!-- HISTORY VIEW -->
 <div id="view-history" style="display:none">
   <div class="container">
-    <div class="section-title">📊 Filtr podle typu</div>
+    <div class="section-title">📊 Typ turnaje</div>
     <div class="history-filter" id="historyFilter">
-      <button class="hf-btn active" data-filter="all" onclick="setHistoryFilter('all')">📚 Vše</button>
-      <button class="hf-btn" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
+      <button class="hf-btn active" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
       <button class="hf-btn" data-filter="cycle3" onclick="setHistoryFilter('cycle3')">🔁 3 hráči</button>
       <button class="hf-btn" data-filter="cl_basic" onclick="setHistoryFilter('cl_basic')">⚽ LM Basic</button>
       <button class="hf-btn" data-filter="cl_full" onclick="setHistoryFilter('cl_full')">🏆 LM Full</button>
       <button class="hf-btn" data-filter="team2v2" onclick="setHistoryFilter('team2v2')">👥 2v2</button>
     </div>
 
-    <div class="section-title">🏆 Celková tabulka <span id="cumulativeFilterLabel" style="font-size:0.8rem;color:var(--text-dim);letter-spacing:1px"></span></div>
+    <div class="section-title"><span id="cumulativeFilterLabel">🏆 Celková tabulka</span></div>
     <div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
       <table class="standings-table">
         <thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>G+</th><th>G−</th><th>GR</th><th>B</th></tr></thead>
@@ -1687,7 +1686,7 @@ async function confirmCloseParty() {
   showTab('history');
 }
 
-let historyFilter = 'all';
+let historyFilter = 'cycle4';
 
 function setHistoryFilter(f) {
   historyFilter = f;
@@ -1707,11 +1706,10 @@ function partyPlayers(p) {
 }
 
 function renderHistory() {
-  const filtered = historyFilter === 'all'
-    ? parties
-    : parties.filter(p => partyType(p) === historyFilter);
+  // POUZE zápasy z vybraného typu turnaje — žádné mixování
+  const filtered = parties.filter(p => partyType(p) === historyFilter);
 
-  // Hráči zúčastnění v daném filtru
+  // Hráči zúčastnění v daném typu
   const playerSet = new Set();
   filtered.forEach(p => partyPlayers(p).forEach(pid => playerSet.add(pid)));
   const playerIds = playerSet.size ? [...playerSet] : PLAYERS.map(p=>p.id);
@@ -1719,25 +1717,23 @@ function renderHistory() {
   const allMatches = filtered.flatMap(p => p.matches||[]);
   renderStandingsTable('cumulativeStandingsBody', allMatches, playerIds);
 
-  // Label u nadpisu
+  // Nadpis ukazuje aktuální typ
   const lblEl = document.getElementById('cumulativeFilterLabel');
-  if (lblEl) {
-    if (historyFilter === 'all') lblEl.textContent = '';
-    else lblEl.textContent = `· ${TOURNAMENT_TYPES[historyFilter]?.name || historyFilter}`;
-  }
+  const tinfo = TOURNAMENT_TYPES[historyFilter];
+  if (lblEl) lblEl.textContent = `${tinfo?.icon || '🏆'} ${tinfo?.name || 'Tabulka'}`;
 
   const el = document.getElementById('partyList');
   if (!filtered.length) {
-    el.innerHTML = '<div class="empty-state">Žádné archivované večírky v této kategorii.</div>';
+    el.innerHTML = '<div class="empty-state">Žádné archivované večírky tohoto typu.</div>';
     return;
   }
   el.innerHTML = [...filtered].sort((a,b)=>b.closedAt-a.closedAt).map(p=>{
     const tt = partyType(p);
-    const tinfo = TOURNAMENT_TYPES[tt] || TOURNAMENT_TYPES.cycle4;
+    const ti = TOURNAMENT_TYPES[tt] || TOURNAMENT_TYPES.cycle4;
     return `<div class="party-item">
       <div class="party-info" onclick="openPartyDetail('${p.id}')">
         <div class="party-date">📅 ${formatDate(p.date)}</div>
-        <div class="party-meta">${tinfo.icon} ${tinfo.name} · ${(p.matches||[]).length} zápasů</div>
+        <div class="party-meta">${ti.icon} ${ti.name} · ${(p.matches||[]).length} zápasů</div>
       </div>
       <button class="party-delete" onclick="deleteParty('${p.id}')" title="Smazat">🗑️</button>
       <span class="party-arrow" onclick="openPartyDetail('${p.id}')">›</span>
