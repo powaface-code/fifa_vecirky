@@ -2781,46 +2781,78 @@ async function advanceClFull() {
         nextMatches.push({ teamA: w1.winnerTeam, teamB: w2.winnerTeam });
       }
 
-      // Přiřaď non-main týmům nové vlastníky (rotace, žádný hráč neopakuje stejný tým)
+      // Přiřaď non-main týmům nové vlastníky:
+      //   - žádný hráč neopakuje stejný tým ve stejném turnaji
+      //   - oba týmy v jednom zápase NESMÍ mít stejného vlastníka (no self-vs-self!)
+      //   - balance: kdo má míň týmů, dostane další
       const ownership = { ...(t.ownershipHistory || {}) };
-      // Identifikuj non-main týmy v dalším kole
-      const nextTeams = nextMatches.flatMap(m => [m.teamA, m.teamB]);
-      const nextNonMains = nextTeams.filter(tid => !PLAYERS.find(p => p.id === tid));
-      const nextMains    = nextTeams.filter(tid =>  PLAYERS.find(p => p.id === tid));
-
-      // Owner pro non-main: hráč, který tým ještě neměl + co nejvíc vyrovnaně přes round
       const playerIds = t.players;
-      const newOwners = {};
-      // Main týmy mají fixní owners
-      nextMains.forEach(tid => { newOwners[tid] = tid; });
+      const isMain = tid => !!PLAYERS.find(p => p.id === tid);
 
-      // Greedy assignment pro non-mains
       const counts = {};
       playerIds.forEach(p => counts[p] = 0);
-      // Mains se počítají do count
-      nextMains.forEach(tid => { counts[tid] = (counts[tid] || 0) + 1; });
+      // Predcount mains
+      nextMatches.forEach(m => {
+        if (isMain(m.teamA)) counts[m.teamA]++;
+        if (isMain(m.teamB)) counts[m.teamB]++;
+      });
 
-      const shuffledNonMains = [...nextNonMains];
-      for (let i = shuffledNonMains.length - 1; i > 0; i--) {
+      const newOwners = {};
+      // Mains: fixed
+      nextMatches.forEach(m => {
+        if (isMain(m.teamA)) newOwners[m.teamA] = m.teamA;
+        if (isMain(m.teamB)) newOwners[m.teamB] = m.teamB;
+      });
+
+      function pickOwner(teamId, opponentOwner) {
+        const history = ownership[teamId] || [];
+        const forbidden = new Set([...history]);
+        if (opponentOwner != null) forbidden.add(opponentOwner);
+        let eligible = playerIds.filter(p => !forbidden.has(p));
+        if (eligible.length === 0) {
+          // Relax history, ale zachovej "≠ opponent"
+          eligible = playerIds.filter(p => p !== opponentOwner);
+        }
+        if (eligible.length === 0) {
+          eligible = playerIds;
+        }
+        const minCount = Math.min(...eligible.map(p => counts[p]));
+        const tied = eligible.filter(p => counts[p] === minCount);
+        return tied[Math.floor(Math.random() * tied.length)];
+      }
+
+      // Pro každý zápas zvlášť přiřaď non-main owners (s ohledem na soupeře)
+      // Zamíchej pořadí zápasů aby random seed nebyl deterministický
+      const matchOrder = nextMatches.map((_, i) => i);
+      for (let i = matchOrder.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffledNonMains[i], shuffledNonMains[j]] = [shuffledNonMains[j], shuffledNonMains[i]];
+        [matchOrder[i], matchOrder[j]] = [matchOrder[j], matchOrder[i]];
       }
-      for (const tid of shuffledNonMains) {
-        const history = ownership[tid] || [];
-        const eligible = playerIds.filter(p => !history.includes(p));
-        const pool = eligible.length > 0 ? eligible : playerIds;
-        const minCount = Math.min(...pool.map(p => counts[p]));
-        const tied = pool.filter(p => counts[p] === minCount);
-        const chosen = tied[Math.floor(Math.random() * tied.length)];
-        newOwners[tid] = chosen;
-        counts[chosen]++;
-        ownership[tid] = [...(ownership[tid] || []), chosen];
+      for (const mIdx of matchOrder) {
+        const m = nextMatches[mIdx];
+        // Zamíchat pořadí stran (kterou stranu řešit první)
+        const sideFirst = Math.random() < 0.5 ? 'A' : 'B';
+        const sides = sideFirst === 'A' ? ['A','B'] : ['B','A'];
+        for (const side of sides) {
+          const tid = side === 'A' ? m.teamA : m.teamB;
+          const otherTid = side === 'A' ? m.teamB : m.teamA;
+          if (newOwners[tid] !== undefined) continue; // main, už přiřazen
+          const opponentOwner = newOwners[otherTid]; // může být undefined
+          const chosen = pickOwner(tid, opponentOwner);
+          newOwners[tid] = chosen;
+          counts[chosen]++;
+          ownership[tid] = [...(ownership[tid] || []), chosen];
+        }
       }
 
-      // Vytvoř schedule items pro nové kolo
+      // Vytvoř schedule items pro nové kolo (původní pořadí matchů)
       nextMatches.forEach((nm, idx) => {
         const ownerA = newOwners[nm.teamA];
         const ownerB = newOwners[nm.teamB];
+        // Safety check: nemělo by nastat ale logni
+        if (ownerA === ownerB) {
+          console.warn(`Same-owner match generated: ${ownerA} (${nm.teamA}) vs ${ownerB} (${nm.teamB})`);
+        }
         schedule.push({
           phase: r.next,
           matchIdx: idx,
