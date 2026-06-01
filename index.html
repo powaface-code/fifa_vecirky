@@ -1389,6 +1389,49 @@
     border-color: rgba(245,200,66,0.3);
     min-height: 80px;
   }
+  .clf-warn {
+    background: rgba(214,59,59,0.12);
+    border: 1px solid rgba(214,59,59,0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .clf-warn button {
+    background: var(--gold);
+    color: #111;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1.5px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .reroll-round-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin: 8px auto;
+    display: block;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .reroll-round-btn:active {
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+  }
   .clfull-round-info {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.78rem;
@@ -2669,15 +2712,102 @@ function renderClFullBracket() {
     </div>`;
   }
 
+  // Detekuj self-match v non-R16 kolech (může jít o stará data před opravou)
+  const buggySelfMatch = (currentTournament?.schedule || []).some(s =>
+    ['qf','sf','f'].includes(s.phase) && s.p1 === s.p2
+  );
+  const warnHtml = buggySelfMatch
+    ? `<div class="clf-warn">⚠️ Losování obsahuje zápas hráče proti sobě.
+        <button onclick="regenerateLastClFullRound()">🎲 Přelosovat poslední kolo</button></div>`
+    : '';
+
+  // Detekuj poslední vygenerované kolo (pro tlačítko "přelosovat", pokud user chce)
+  const phaseOrderRev = ['f','sf','qf'];
+  let lastGeneratedPhase = null;
+  for (const ph of phaseOrderRev) {
+    if ((currentTournament?.schedule || []).some(s => s.phase === ph)) {
+      lastGeneratedPhase = ph;
+      break;
+    }
+  }
+  const rerollBtn = (lastGeneratedPhase && !buggySelfMatch)
+    ? `<button class="reroll-round-btn" onclick="regenerateLastClFullRound()">🎲 Nelíbí se losování ${phaseLabel(lastGeneratedPhase)}? Klikni pro přelosování</button>`
+    : '';
+
   el.innerHTML = `
     <div class="section-title">🏆 Pavouk 16 týmů</div>
+    ${warnHtml}
     <div class="clfull-rounds">
       ${renderRound(r16Items, 'r16', '🏟️ Osmifinále', '')}
       ${renderRound(qfItems, 'qf',  '⚽ Čtvrtfinále', '')}
       ${renderRound(sfItems, 'sf',  '🥈 Semifinále', '')}
       <div class="clfull-final">${renderRound(fItems, 'f', '🏆 Finále', 'cols-1')}</div>
     </div>
+    ${rerollBtn}
   `;
+}
+
+async function regenerateLastClFullRound() {
+  const t = currentTournament;
+  if (!t || t.type !== 'cl_full') return;
+  const phaseOrderRev = ['f','sf','qf'];
+  let lastPhase = null;
+  for (const ph of phaseOrderRev) {
+    if ((t.schedule || []).some(s => s.phase === ph)) {
+      lastPhase = ph;
+      break;
+    }
+  }
+  if (!lastPhase) {
+    alert('Nic k přelosování — máš jen R16. Pro nové R16 spusť nový turnaj.');
+    return;
+  }
+  const playedInRound = matches.filter(m => m.phase === lastPhase).length;
+  const confirmMsg = playedInRound > 0
+    ? `Přelosovat ${phaseLabel(lastPhase)}?\nTo smaže ${playedInRound} odehraných zápasů v tomto kole.`
+    : `Přelosovat ${phaseLabel(lastPhase)}?`;
+  if (!confirm(confirmMsg)) return;
+
+  // 1) Smaž schedule items v tomto kole
+  const newSchedule = (t.schedule || []).filter(s => s.phase !== lastPhase);
+  // 2) Odeber poslední záznam z ownership history pro non-main týmy v tomto kole
+  const newOwnership = {};
+  Object.keys(t.ownershipHistory || {}).forEach(tid => {
+    newOwnership[tid] = [...(t.ownershipHistory[tid] || [])];
+  });
+  const lastItems = (t.schedule || []).filter(s => s.phase === lastPhase);
+  const isMain = tid => !!PLAYERS.find(p => p.id === tid);
+  // Identifikuj non-main týmy v tomto kole + jejich vlastníky z tohoto kola
+  const removedByTeam = {};
+  lastItems.forEach(item => {
+    if (!isMain(item.t1)) {
+      removedByTeam[item.t1] = (removedByTeam[item.t1] || 0) + 0; // marker
+      // Odeber poslední přidaný owner z history
+    }
+    if (!isMain(item.t2)) {
+      removedByTeam[item.t2] = (removedByTeam[item.t2] || 0) + 0;
+    }
+  });
+  // Pop last entry of each non-main team's history
+  Object.keys(removedByTeam).forEach(tid => {
+    if (newOwnership[tid]?.length) {
+      newOwnership[tid] = newOwnership[tid].slice(0, -1);
+    }
+  });
+
+  // 3) Smaž matches v tomto kole
+  const matchesToDelete = matches.filter(m => m.phase === lastPhase);
+
+  try {
+    await Promise.all(matchesToDelete.map(m => matchesCol.doc(m.id).delete()));
+    await tournamentDoc.set({ ...t, schedule: newSchedule, ownershipHistory: newOwnership });
+    await scheduleDoc.set({ pairs: newSchedule });
+    showToast(`🎲 ${phaseLabel(lastPhase)} přelosováno`);
+    // advanceClFull automaticky vyvolá regeneraci tohoto kola
+  } catch (e) {
+    console.error(e);
+    alert('Přelosování selhalo: ' + e.message);
+  }
 }
 
 function clickClFullMatch(phase, matchIdx) {
