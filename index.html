@@ -339,6 +339,20 @@
     display: grid;
     grid-template-columns: 1fr auto 1fr auto;
     align-items: center;
+    position: relative;
+  }
+  .match-phase-tag {
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 1.2px;
+    background: rgba(245,200,66,0.18);
+    color: var(--gold);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(245,200,66,0.3);
   }
   .match-p {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1030,7 +1044,7 @@
   }
   .bracket-leg {
     display: grid;
-    grid-template-columns: 16px 1fr auto 1fr;
+    grid-template-columns: 14px 1fr auto 1fr 14px;
     align-items: center;
     gap: 4px;
     font-family: 'Barlow Condensed', sans-serif;
@@ -1041,6 +1055,11 @@
     cursor: pointer;
     transition: all 0.15s;
     min-height: 28px;
+  }
+  .bracket-edit-hint {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    text-align: right;
   }
   .bracket-leg:active { background: rgba(245,200,66,0.12); }
   .bracket-leg .leg-label {
@@ -1939,30 +1958,36 @@ function renderClBasicBracket(semiItems, thirdItem, finalItem) {
     const p1 = getP(leg.p1), p2 = getP(leg.p2);
     const played = !!m;
     const cls = played ? '' : 'unplayed';
+    const hint = played ? '<span class="bracket-edit-hint">✏️</span>' : '';
     return `<div class="bracket-leg ${cls}"
       onclick="clickScheduleSlot('${leg.p1}','${leg.p2}','semi','${pairLabel} (${i+1}. zápas)')">
       <span class="leg-label">${i+1}.</span>
       <span class="bname">${p1?.name || '?'}</span>
       <span class="bscore">${played ? `${m.g1}:${m.g2}` : '—:—'}</span>
       <span class="bname right">${p2?.name || '?'}</span>
+      ${hint}
     </div>`;
   }
 
   function renderPair(pair) {
     const legsHtml = pair.legs.map((leg, i) => renderLeg(leg, i, pair.label)).join('');
+    const totalLegs = pair.singleLeg ? 1 : 2;
     const agg = computeAggregate(pair.legs[0].p1, pair.legs[0].p2);
+    const allPlayed = agg.played >= totalLegs;
+    const tied = allPlayed && agg.aScore === agg.bScore;
     let aggHtml = '';
-    if (agg.both) {
-      if (agg.tied) {
-        aggHtml = `<div class="bracket-aggregate tied">⚠️ Souhrn ${agg.aScore}:${agg.bScore} — REMÍZA<br>Klikni na zápas a uprav skóre</div>`;
+    if (allPlayed) {
+      if (tied) {
+        aggHtml = `<div class="bracket-aggregate tied">⚠️ ${pair.singleLeg ? 'REMÍZA' : `Souhrn ${agg.aScore}:${agg.bScore} — REMÍZA`}<br>Klikni na zápas v rámečku výše a uprav skóre ✏️</div>`;
       } else {
-        const wn = getP(agg.winner)?.name;
+        const winnerId = agg.aScore > agg.bScore ? pair.legs[0].p1 : pair.legs[0].p2;
+        const wn = getP(winnerId)?.name;
         const hi = Math.max(agg.aScore, agg.bScore);
         const lo = Math.min(agg.aScore, agg.bScore);
-        aggHtml = `<div class="bracket-aggregate">Souhrn ${hi}:${lo} → <strong>${wn}</strong> postupuje</div>`;
+        aggHtml = `<div class="bracket-aggregate">${pair.singleLeg ? 'Vítěz' : `Souhrn ${hi}:${lo} →`} <strong>${wn}</strong> postupuje</div>`;
       }
     } else {
-      aggHtml = `<div class="bracket-aggregate" style="font-style:italic">${agg.played}/${pair.total || 2} zápasů</div>`;
+      aggHtml = `<div class="bracket-aggregate" style="font-style:italic">${agg.played}/${totalLegs} ${totalLegs===1?'zápas':'zápasů'}</div>`;
     }
     return `<div class="bracket-pair">
       <div class="bracket-pair-title">${pair.label}${pair.singleLeg ? '' : ' (2 zápasy)'}</div>
@@ -2025,34 +2050,67 @@ async function checkTournamentProgress() {
   // Fáze 3, 4: další typy
 }
 
+let advanceInProgress = false;
 async function advanceClBasic() {
+  if (advanceInProgress) return;
   const t = currentTournament;
   if (!t || t.type !== 'cl_basic') return;
-  const schedule = [...(t.schedule || [])];
+  let schedule = [...(t.schedule || [])];
+
+  // ── UPGRADE: legacy single-leg SF (2 items) → 2-leg SF (4 items) ──────────
+  const semiBefore = schedule.filter(s => s.phase === 'semi');
+  if (semiBefore.length === 2) {
+    advanceInProgress = true;
+    try {
+      const groupItems = schedule.filter(s => s.phase === 'group');
+      const finalItem  = schedule.find(s => s.phase === 'final');
+      const thirdItem  = schedule.find(s => s.phase === 'third');
+      const newSemis = [
+        semiBefore[0],
+        { p1: semiBefore[0].p2, p2: semiBefore[0].p1, phase: 'semi' },
+        semiBefore[1],
+        { p1: semiBefore[1].p2, p2: semiBefore[1].p1, phase: 'semi' },
+      ];
+      const newSchedule = [...groupItems, ...newSemis];
+      if (thirdItem) newSchedule.push(thirdItem);
+      if (finalItem) newSchedule.push(finalItem);
+      await tournamentDoc.set({ ...t, schedule: newSchedule });
+      await scheduleDoc.set({ pairs: newSchedule });
+      showToast('🔄 Semifinále upgradováno na 2 zápasy (home + away)');
+    } finally {
+      advanceInProgress = false;
+    }
+    return;
+  }
 
   const groupTotal = schedule.filter(s => s.phase === 'group').length;
   const groupPlayed = matches.filter(m => (m.phase || 'group') === 'group').length;
 
-  // 1) Po dohrání group → vygeneruj 2 zápasy SF1 + 2 zápasy SF2
+  // 1) Po dohrání group → vygeneruj 4 zápasy SF (2 leg na pair)
   const hasSF = schedule.some(s => s.phase === 'semi');
-  if (groupPlayed >= groupTotal && !hasSF) {
-    const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
-    const standings = calcStandingsFrom(groupMatches, t.players);
-    if (standings.length >= 4) {
-      const s = standings;
-      schedule.push(
-        // SF1: 1. vs 4. — 2 zápasy (home + away)
-        { p1: s[0].id, p2: s[3].id, phase: 'semi' },
-        { p1: s[3].id, p2: s[0].id, phase: 'semi' },
-        // SF2: 2. vs 3. — 2 zápasy (home + away)
-        { p1: s[1].id, p2: s[2].id, phase: 'semi' },
-        { p1: s[2].id, p2: s[1].id, phase: 'semi' },
-      );
-      await tournamentDoc.set({ ...t, schedule, state: { stage: 'semi' } });
-      await scheduleDoc.set({ pairs: schedule });
-      showToast('🏆 Group hotov! Semifinále (2 zápasy) vygenerováno');
-      return;
+  if (groupPlayed >= groupTotal && !hasSF && groupTotal > 0) {
+    advanceInProgress = true;
+    try {
+      const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
+      const standings = calcStandingsFrom(groupMatches, t.players);
+      if (standings.length >= 4) {
+        const s = standings;
+        schedule.push(
+          // SF1: 1. vs 4. — 2 zápasy (home + away)
+          { p1: s[0].id, p2: s[3].id, phase: 'semi' },
+          { p1: s[3].id, p2: s[0].id, phase: 'semi' },
+          // SF2: 2. vs 3. — 2 zápasy (home + away)
+          { p1: s[1].id, p2: s[2].id, phase: 'semi' },
+          { p1: s[2].id, p2: s[1].id, phase: 'semi' },
+        );
+        await tournamentDoc.set({ ...t, schedule, state: { stage: 'semi' } });
+        await scheduleDoc.set({ pairs: schedule });
+        showToast('🏆 Group hotov! Semifinále (2 zápasy) vygenerováno');
+      }
+    } finally {
+      advanceInProgress = false;
     }
+    return;
   }
 
   // 2) Po dohrání všech 4 SF → vygeneruj F + 3rd (pouze pokud agregát není remíza)
@@ -2063,17 +2121,20 @@ async function advanceClBasic() {
     const agg1 = computeAggregate(semiItems[0].p1, semiItems[0].p2);
     const agg2 = computeAggregate(semiItems[2].p1, semiItems[2].p2);
     if (!agg1.both || !agg2.both) return;
-    if (agg1.tied || agg2.tied) {
-      // Žádný toast, varování je v bracketu
-      return;
+    if (agg1.tied || agg2.tied) return; // varování v bracketu
+
+    advanceInProgress = true;
+    try {
+      schedule.push(
+        { p1: agg1.winner, p2: agg2.winner, phase: 'final' },
+        { p1: agg1.loser,  p2: agg2.loser,  phase: 'third' },
+      );
+      await tournamentDoc.set({ ...t, schedule, state: { stage: 'final' } });
+      await scheduleDoc.set({ pairs: schedule });
+      showToast('⚽ Finále a zápas o 3. místo vygenerován!');
+    } finally {
+      advanceInProgress = false;
     }
-    schedule.push(
-      { p1: agg1.winner, p2: agg2.winner, phase: 'final' },
-      { p1: agg1.loser,  p2: agg2.loser,  phase: 'third' },
-    );
-    await tournamentDoc.set({ ...t, schedule, state: { stage: 'final' } });
-    await scheduleDoc.set({ pairs: schedule });
-    showToast('⚽ Finále a zápas o 3. místo vygenerován!');
   }
 }
 
@@ -2460,7 +2521,12 @@ function renderMatches() {
   el.innerHTML=[...matches].reverse().map(m=>{
     const p1=getP(m.p1), p2=getP(m.p2);
     if (!p1||!p2) return '';
+    const phaseTxt = phaseLabel(m.phase);
+    const phaseHtml = phaseTxt
+      ? `<div class="match-phase-tag">${phaseTxt}</div>`
+      : '';
     return `<div class="match-item">
+      ${phaseHtml}
       <div class="match-p home">${badge(p1,24)}<span class="pname">${p1.name}</span></div>
       <div class="match-score-box">${m.g1} : ${m.g2}</div>
       <div class="match-p away">${badge(p2,24)}<span class="pname">${p2.name}</span></div>
@@ -2511,11 +2577,16 @@ function init() {
   tournamentDoc.onSnapshot(snap => {
     if (snap.exists) {
       currentTournament = snap.data();
+      // Synchronizuj SCHEDULE z tournament (tournament je primární zdroj pravdy)
+      if (currentTournament.schedule) SCHEDULE = currentTournament.schedule;
       renderTournamentInfo();
       // Reload hráčských selectů (pokud se změnil počet hráčů)
       fillSelect('fP1');
       fillSelect('fP2','','',true);
       renderStandings();
+      renderSchedule();
+      // Po každé změně turnaje překontroluj progres (může se vygenerovat F+3rd)
+      checkTournamentProgress();
     }
   });
   applyBackground(activeBg);
