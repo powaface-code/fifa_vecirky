@@ -1281,113 +1281,220 @@
     border: 1px solid rgba(255,255,255,0.15);
   }
 
-  /* LM FULL — pavouk vizualizace */
-  .clfull-rounds {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 8px;
-  }
-  .clfull-round {
-    background: rgba(255,255,255,0.03);
+  /* LM FULL — bracket s propojujícími čarami */
+  .bracket-wrap {
+    background: rgba(255,255,255,0.02);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 12px;
+    padding: 10px 6px 14px;
+    margin-top: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .clfull-round-title {
+  .bracket {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    min-width: 480px;
+    padding: 0 6px;
+  }
+  .bracket-round {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 105px;
+  }
+  .bracket-round-label {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 2px;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
     color: var(--gold);
     text-align: center;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    padding-bottom: 4px;
     border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
   }
-  .clfull-matches {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+  .bracket-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    flex: 1;
+    gap: 6px;
   }
-  .clfull-matches.cols-1 { grid-template-columns: 1fr; }
-  .clfull-match {
-    background: rgba(0,0,0,0.3);
+  .bracket-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    flex: 1;
+    position: relative;
+    gap: 6px;
+  }
+  /* Vertikální spojnice mezi dvěma zápasy v páru (pravý okraj) */
+  .bracket-round:not(.bracket-final) .bracket-group::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 22px;
+    bottom: 22px;
+    width: 1px;
+    background: var(--gold-dark);
+    pointer-events: none;
+  }
+  /* Horizontální spojnice z páru do dalšího kola */
+  .bracket-round:not(.bracket-final) .bracket-group::before {
+    content: '';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    width: 7px;
+    height: 1px;
+    background: var(--gold-dark);
+    pointer-events: none;
+  }
+  .bracket-group.single::after, .bracket-group.single::before { display: none; }
+
+  .bracket-match {
+    background: rgba(0,0,0,0.4);
     border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px;
+    border-radius: 6px;
+    padding: 4px 6px;
     cursor: pointer;
     transition: all 0.15s;
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    min-height: 64px;
-  }
-  .clfull-match.unplayed {
-    border: 1px dashed rgba(245,200,66,0.35);
-    background: rgba(245,200,66,0.05);
-  }
-  .clfull-match.current {
-    border-color: #00e676;
-    box-shadow: 0 0 8px rgba(0,230,118,0.35);
-  }
-  .clfull-match.tied {
-    border-color: rgba(214,59,59,0.5);
-    background: rgba(214,59,59,0.08);
-  }
-  .clfull-match.pending {
-    opacity: 0.5;
-    cursor: default;
-  }
-  .clfull-match:active { background: rgba(245,200,66,0.1); }
-  .clfull-side {
-    display: grid;
-    grid-template-columns: 22px 1fr auto;
-    align-items: center;
-    gap: 6px;
+    gap: 2px;
+    min-height: 44px;
+    position: relative;
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.8rem;
-    min-width: 0;
+    font-size: 0.7rem;
   }
-  .clfull-side .team-name-cell {
+  .bracket-match.unplayed {
+    border: 1px dashed rgba(245,200,66,0.35);
+    background: rgba(245,200,66,0.04);
+  }
+  .bracket-match.current {
+    border-color: #00e676;
+    box-shadow: 0 0 6px rgba(0,230,118,0.3);
+  }
+  .bracket-match.tied {
+    border-color: rgba(214,59,59,0.5);
+    background: rgba(214,59,59,0.1);
+  }
+  .bracket-match.pending { opacity: 0.5; cursor: default; }
+  .bracket-match:active { background: rgba(245,200,66,0.1); }
+  /* Horizontální spojnice ze zápasu doprava */
+  .bracket-round:not(.bracket-final) .bracket-match::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: 50%;
+    width: 7px;
+    height: 1px;
+    background: var(--gold-dark);
+    pointer-events: none;
+  }
+  /* Horizontální spojnice ZA zápasem zleva — kromě R16 */
+  .bracket-round:not(.bracket-r16):not(.bracket-final) .bracket-match::before,
+  .bracket-final .bracket-match::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    width: 7px;
+    height: 1px;
+    background: var(--gold-dark);
+    pointer-events: none;
+  }
+  .bracket-empty {
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.68rem;
+    font-style: italic;
+    padding: 4px;
+  }
+
+  .bracket-side {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    line-height: 1.05;
+  }
+  .bracket-side img.badge,
+  .bracket-side .team-text-badge {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 3px;
+    font-size: 0.5rem !important;
+  }
+  .bracket-team-info {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
   }
-  .clfull-side .team-name-cell .tname {
+  .bracket-team-info .b-tname {
     font-weight: 700;
     color: var(--text);
+    font-size: 0.7rem;
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.1;
   }
-  .clfull-side .team-name-cell .townr {
-    font-size: 0.68rem;
+  .bracket-team-info .b-towner {
     color: var(--text-dim);
+    font-size: 0.58rem;
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
   }
-  .clfull-side .clf-score {
+  .bracket-side .b-score {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.05rem;
+    font-size: 0.85rem;
     color: var(--text);
-    min-width: 18px;
+    min-width: 12px;
     text-align: right;
+    line-height: 1;
   }
-  .clfull-side .clf-score.dash { color: var(--text-dim); }
-  .clfull-side.winner .team-name-cell .tname { color: var(--gold); }
-  .clfull-side.loser .team-name-cell .tname { color: var(--text-dim); text-decoration: line-through; opacity: 0.7; }
-  .clfull-tie-warn {
+  .bracket-side .b-score.dash { color: var(--text-dim); }
+  .bracket-side.winner .b-tname { color: var(--gold); }
+  .bracket-side.loser .b-tname { color: var(--text-dim); text-decoration: line-through; opacity: 0.6; }
+
+  .bracket-tie-warn {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.72rem;
+    font-size: 0.58rem;
     color: var(--red);
     font-weight: 700;
     text-align: center;
-    padding-top: 4px;
-    border-top: 1px dashed rgba(214,59,59,0.3);
+    line-height: 1;
+    margin-top: 1px;
   }
-  .clfull-final .clfull-match {
-    background: linear-gradient(135deg, rgba(245,200,66,0.1), rgba(245,200,66,0.03));
-    border-color: rgba(245,200,66,0.3);
-    min-height: 80px;
+
+  /* Final highlight */
+  .bracket-final .bracket-match {
+    background: linear-gradient(135deg, rgba(245,200,66,0.14), rgba(245,200,66,0.04));
+    border-color: rgba(245,200,66,0.45);
+    min-height: 56px;
+  }
+  .bracket-trophy {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    color: var(--gold);
+    text-align: center;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(245,200,66,0.3);
   }
   .clf-warn {
     background: rgba(214,59,59,0.12);
@@ -1431,14 +1538,6 @@
   .reroll-round-btn:active {
     background: rgba(255,255,255,0.1);
     color: var(--text);
-  }
-  .clfull-round-info {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.78rem;
-    color: var(--text-dim);
-    text-align: center;
-    margin-bottom: 8px;
-    font-style: italic;
   }
 
   /* 2v2/cl_full team display ve formuláři */
@@ -2649,6 +2748,19 @@ function clFullRoundWinners(phase) {
   });
 }
 
+// Krátký název týmu (pro úzké boxy v bracketu)
+function shortTeamName(teamId) {
+  const team = getTeam(teamId);
+  if (!team) return '?';
+  if (team.isMain) {
+    // Real Madrid → REA, PSG → PSG, Barcelona → BAR, Liverpool → LIV
+    const name = team.name;
+    const map = { 'Real Madrid':'Real','PSG':'PSG','Barcelona':'Barca','Liverpool':'Liverpool' };
+    return map[name] || name.substring(0, 5);
+  }
+  return team.name; // non-main už mají krátké názvy
+}
+
 function renderClFullBracket() {
   const el = document.getElementById('bracketContainer');
   if (!el || !currentTournament || currentTournament.type !== 'cl_full') {
@@ -2656,64 +2768,118 @@ function renderClFullBracket() {
     return;
   }
   const schedule = currentTournament.schedule || [];
-  const r16Items = schedule.filter(s => s.phase === 'r16');
-  const qfItems  = schedule.filter(s => s.phase === 'qf');
-  const sfItems  = schedule.filter(s => s.phase === 'sf');
-  const fItems   = schedule.filter(s => s.phase === 'f');
+  const r16Items = schedule.filter(s => s.phase === 'r16').sort((a,b)=>a.matchIdx-b.matchIdx);
+  const qfItems  = schedule.filter(s => s.phase === 'qf').sort((a,b)=>a.matchIdx-b.matchIdx);
+  const sfItems  = schedule.filter(s => s.phase === 'sf').sort((a,b)=>a.matchIdx-b.matchIdx);
+  const fItems   = schedule.filter(s => s.phase === 'f').sort((a,b)=>a.matchIdx-b.matchIdx);
 
-  function renderRoundMatches(items, phase) {
-    const playedItems = items.map(item => findClFullMatch(phase, item.matchIdx));
-    // Najdi aktuální (první neodehraný)
-    const currentIdx = playedItems.findIndex(m => !m);
-    return items.map((item, idx) => {
-      const m = playedItems[idx];
-      const played = !!m;
-      const tie = played && m.g1 === m.g2;
-      const win1 = played && !tie && m.g1 > m.g2;
-      const win2 = played && !tie && m.g2 > m.g1;
-      const isCurrent = idx === currentIdx;
-      const cls = played
-        ? (tie ? 'tied' : '')
-        : (isCurrent ? 'unplayed current' : 'unplayed');
-      const p1 = getP(item.p1), p2 = getP(item.p2);
-      const t1 = getTeam(item.t1), t2 = getTeam(item.t2);
-      return `<div class="clfull-match ${cls}" onclick="clickClFullMatch('${phase}', ${item.matchIdx})">
-        <div class="clfull-side ${win1 ? 'winner' : (win2 ? 'loser' : '')}">
-          ${teamBadgeHtml(item.t1, 22)}
-          <span class="team-name-cell">
-            <span class="tname">${t1?.name || '?'}</span>
-            <span class="townr">${p1?.name || '?'}</span>
-          </span>
-          <span class="clf-score ${played ? '' : 'dash'}">${played ? m.g1 : '—'}</span>
-        </div>
-        <div class="clfull-side ${win2 ? 'winner' : (win1 ? 'loser' : '')}">
-          ${teamBadgeHtml(item.t2, 22)}
-          <span class="team-name-cell">
-            <span class="tname">${t2?.name || '?'}</span>
-            <span class="townr">${p2?.name || '?'}</span>
-          </span>
-          <span class="clf-score ${played ? '' : 'dash'}">${played ? m.g2 : '—'}</span>
-        </div>
-        ${tie ? '<div class="clfull-tie-warn">⚠️ Remíza — klikni a uprav</div>' : ''}
-      </div>`;
-    }).join('');
-  }
-
-  function renderRound(items, phase, title, colsClass) {
-    if (!items.length) {
-      return `<div class="clfull-round">
-        <div class="clfull-round-title">${title}</div>
-        <div class="clfull-round-info">— čeká na předchozí kolo —</div>
-      </div>`;
-    }
-    return `<div class="clfull-round">
-      <div class="clfull-round-title">${title}</div>
-      <div class="clfull-matches ${colsClass}">${renderRoundMatches(items, phase)}</div>
+  function renderMatchBox(item, phase, isCurrent) {
+    const m = findClFullMatch(phase, item.matchIdx);
+    const played = !!m;
+    const tie = played && m.g1 === m.g2;
+    const win1 = played && !tie && m.g1 > m.g2;
+    const win2 = played && !tie && m.g2 > m.g1;
+    const cls = played
+      ? (tie ? 'tied' : '')
+      : (isCurrent ? 'unplayed current' : 'unplayed');
+    const p1 = getP(item.p1), p2 = getP(item.p2);
+    const tag1 = shortTeamName(item.t1);
+    const tag2 = shortTeamName(item.t2);
+    return `<div class="bracket-match ${cls}" onclick="clickClFullMatch('${phase}', ${item.matchIdx})">
+      <div class="bracket-side ${win1 ? 'winner' : (win2 ? 'loser' : '')}">
+        ${teamBadgeHtml(item.t1, 14)}
+        <span class="bracket-team-info">
+          <span class="b-tname">${tag1}</span>
+          <span class="b-towner">${p1?.name || '?'}</span>
+        </span>
+        <span class="b-score ${played ? '' : 'dash'}">${played ? m.g1 : '–'}</span>
+      </div>
+      <div class="bracket-side ${win2 ? 'winner' : (win1 ? 'loser' : '')}">
+        ${teamBadgeHtml(item.t2, 14)}
+        <span class="bracket-team-info">
+          <span class="b-tname">${tag2}</span>
+          <span class="b-towner">${p2?.name || '?'}</span>
+        </span>
+        <span class="b-score ${played ? '' : 'dash'}">${played ? m.g2 : '–'}</span>
+      </div>
+      ${tie ? '<div class="bracket-tie-warn">⚠ remíza</div>' : ''}
     </div>`;
   }
 
-  // Detekuj self-match v non-R16 kolech (může jít o stará data před opravou)
-  const buggySelfMatch = (currentTournament?.schedule || []).some(s =>
+  // Determine "current" match across all rounds (first unplayed in earliest round)
+  let currentMatchKey = null;
+  for (const phase of ['r16','qf','sf','f']) {
+    const items = schedule.filter(s => s.phase === phase).sort((a,b)=>a.matchIdx-b.matchIdx);
+    for (const item of items) {
+      if (!findClFullMatch(phase, item.matchIdx)) {
+        currentMatchKey = `${phase}:${item.matchIdx}`;
+        break;
+      }
+    }
+    if (currentMatchKey) break;
+  }
+  const isCurrent = (phase, mIdx) => currentMatchKey === `${phase}:${mIdx}`;
+
+  // Build round columns
+  function renderR16() {
+    // 4 párovací skupiny (každá obsahuje 2 R16 zápasy)
+    if (r16Items.length === 0) {
+      return Array.from({length:4}, () => `<div class="bracket-group">
+        <div class="bracket-empty">— prázdné —</div>
+        <div class="bracket-empty">— prázdné —</div>
+      </div>`).join('');
+    }
+    let html = '';
+    for (let g = 0; g < 4; g++) {
+      const a = r16Items[g*2], b = r16Items[g*2+1];
+      html += `<div class="bracket-group">
+        ${a ? renderMatchBox(a, 'r16', isCurrent('r16', a.matchIdx)) : '<div class="bracket-empty">—</div>'}
+        ${b ? renderMatchBox(b, 'r16', isCurrent('r16', b.matchIdx)) : '<div class="bracket-empty">—</div>'}
+      </div>`;
+    }
+    return html;
+  }
+
+  function renderQF() {
+    // 2 párovací skupiny (každá 2 QF)
+    let html = '';
+    for (let g = 0; g < 2; g++) {
+      const a = qfItems[g*2], b = qfItems[g*2+1];
+      const aHtml = a ? renderMatchBox(a, 'qf', isCurrent('qf', a.matchIdx)) : '<div class="bracket-empty">— čeká —</div>';
+      const bHtml = b ? renderMatchBox(b, 'qf', isCurrent('qf', b.matchIdx)) : '<div class="bracket-empty">— čeká —</div>';
+      html += `<div class="bracket-group">${aHtml}${bHtml}</div>`;
+    }
+    return html;
+  }
+
+  function renderSF() {
+    // 1 párovací skupina (2 SF)
+    const a = sfItems[0], b = sfItems[1];
+    const aHtml = a ? renderMatchBox(a, 'sf', isCurrent('sf', a.matchIdx)) : '<div class="bracket-empty">— čeká —</div>';
+    const bHtml = b ? renderMatchBox(b, 'sf', isCurrent('sf', b.matchIdx)) : '<div class="bracket-empty">— čeká —</div>';
+    return `<div class="bracket-group">${aHtml}${bHtml}</div>`;
+  }
+
+  function renderF() {
+    const f = fItems[0];
+    const fHtml = f ? renderMatchBox(f, 'f', isCurrent('f', f.matchIdx)) : '<div class="bracket-empty">— čeká —</div>';
+    // Pokud finále odehráno bez remízy → ukaž "🏆 Vítěz: ..."
+    let championLabel = '';
+    if (f) {
+      const m = findClFullMatch('f', f.matchIdx);
+      if (m && m.g1 !== m.g2) {
+        const winT = m.g1 > m.g2 ? f.t1 : f.t2;
+        const winP = m.g1 > m.g2 ? f.p1 : f.p2;
+        const t = getTeam(winT);
+        const p = getP(winP);
+        championLabel = `<div class="bracket-trophy">🏆 ${t?.name || '?'} (${p?.name || '?'})</div>`;
+      }
+    }
+    return `<div class="bracket-group single">${fHtml}${championLabel}</div>`;
+  }
+
+  // Detekuj self-match
+  const buggySelfMatch = schedule.some(s =>
     ['qf','sf','f'].includes(s.phase) && s.p1 === s.p2
   );
   const warnHtml = buggySelfMatch
@@ -2721,14 +2887,10 @@ function renderClFullBracket() {
         <button onclick="regenerateLastClFullRound()">🎲 Přelosovat poslední kolo</button></div>`
     : '';
 
-  // Detekuj poslední vygenerované kolo (pro tlačítko "přelosovat", pokud user chce)
   const phaseOrderRev = ['f','sf','qf'];
   let lastGeneratedPhase = null;
   for (const ph of phaseOrderRev) {
-    if ((currentTournament?.schedule || []).some(s => s.phase === ph)) {
-      lastGeneratedPhase = ph;
-      break;
-    }
+    if (schedule.some(s => s.phase === ph)) { lastGeneratedPhase = ph; break; }
   }
   const rerollBtn = (lastGeneratedPhase && !buggySelfMatch)
     ? `<button class="reroll-round-btn" onclick="regenerateLastClFullRound()">🎲 Nelíbí se losování ${phaseLabel(lastGeneratedPhase)}? Klikni pro přelosování</button>`
@@ -2737,11 +2899,25 @@ function renderClFullBracket() {
   el.innerHTML = `
     <div class="section-title">🏆 Pavouk 16 týmů</div>
     ${warnHtml}
-    <div class="clfull-rounds">
-      ${renderRound(r16Items, 'r16', '🏟️ Osmifinále', '')}
-      ${renderRound(qfItems, 'qf',  '⚽ Čtvrtfinále', '')}
-      ${renderRound(sfItems, 'sf',  '🥈 Semifinále', '')}
-      <div class="clfull-final">${renderRound(fItems, 'f', '🏆 Finále', 'cols-1')}</div>
+    <div class="bracket-wrap">
+      <div class="bracket">
+        <div class="bracket-round bracket-r16">
+          <div class="bracket-round-label">🏟️ R16</div>
+          <div class="bracket-col">${renderR16()}</div>
+        </div>
+        <div class="bracket-round bracket-qf">
+          <div class="bracket-round-label">⚽ QF</div>
+          <div class="bracket-col">${renderQF()}</div>
+        </div>
+        <div class="bracket-round bracket-sf">
+          <div class="bracket-round-label">🥈 SF</div>
+          <div class="bracket-col">${renderSF()}</div>
+        </div>
+        <div class="bracket-round bracket-final">
+          <div class="bracket-round-label">🏆 F</div>
+          <div class="bracket-col">${renderF()}</div>
+        </div>
+      </div>
     </div>
     ${rerollBtn}
   `;
