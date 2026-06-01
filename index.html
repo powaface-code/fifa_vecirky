@@ -992,9 +992,9 @@
 
   /* BRACKET vizualizace (LM Basic) */
   .cl-bracket {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     margin-top: 8px;
   }
   .bracket-stage {
@@ -1005,6 +1005,92 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+  }
+  .bracket-pairs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .bracket-pair {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bracket-pair-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 2px;
+  }
+  .bracket-leg {
+    display: grid;
+    grid-template-columns: 16px 1fr auto 1fr;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 28px;
+  }
+  .bracket-leg:active { background: rgba(245,200,66,0.12); }
+  .bracket-leg .leg-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+  }
+  .bracket-leg .bname {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .bracket-leg .bname.right { text-align: right; }
+  .bracket-leg .bname.winner { color: var(--gold); font-weight: 700; }
+  .bracket-leg .bname.loser { color: var(--text-dim); text-decoration: line-through; opacity: 0.7; }
+  .bracket-leg .bscore {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    padding: 0 4px;
+    min-width: 28px;
+    text-align: center;
+    color: var(--text);
+  }
+  .bracket-leg.unplayed {
+    border: 1px dashed rgba(245,200,66,0.35);
+    background: rgba(245,200,66,0.05);
+  }
+  .bracket-leg.unplayed .bscore { color: var(--text-dim); }
+  .bracket-leg.current { box-shadow: 0 0 8px rgba(0,230,118,0.35); border-color: #00e676; }
+  .bracket-aggregate {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    text-align: center;
+    padding-top: 4px;
+    border-top: 1px dashed var(--line);
+    margin-top: 2px;
+  }
+  .bracket-aggregate strong { color: var(--gold); }
+  .bracket-aggregate.tied {
+    color: var(--red);
+    border-color: rgba(214,59,59,0.4);
+    font-weight: 700;
+    background: rgba(214,59,59,0.08);
+    border-radius: 6px;
+    padding: 6px;
+    border-top: none;
+    border: 1px solid rgba(214,59,59,0.4);
   }
   .bracket-title {
     font-family: 'Bebas Neue', sans-serif;
@@ -1752,42 +1838,28 @@ function renderCycleSchedule() {
   }).join('');
 }
 
-// Liga mistrů Basic — group + play-off, lineární progres (každý slot 1×)
+// Liga mistrů Basic — group + 2-leg semi + play-off
 function renderClBasicSchedule() {
-  // Per-occurrence progres: pair se může objevit vícekrát (home/away)
-  // a zápas v matches s touhle dvojicí "spotřebuje" jeden výskyt v pořadí
   const groupItems = SCHEDULE.filter(s => s.phase === 'group');
   const semiItems  = SCHEDULE.filter(s => s.phase === 'semi');
   const thirdItem  = SCHEDULE.find(s => s.phase === 'third');
   const finalItem  = SCHEDULE.find(s => s.phase === 'final');
 
-  // Spočítej kolikrát byl pár [p1,p2] odehrán v group fázi
-  const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
-  const pairCount = {};
-  groupMatches.forEach(m => {
-    const k = [m.p1, m.p2].sort().join('|');
-    pairCount[k] = (pairCount[k] || 0) + 1;
+  // Group: exact-order matching (slot je odehraný jen pokud má match se stejným p1,p2)
+  const groupMatchesByKey = {};
+  matches.filter(m => (m.phase || 'group') === 'group').forEach(m => {
+    groupMatchesByKey[`${m.p1}|${m.p2}`] = m;
   });
 
-  // Pro každý group slot: "consumed" pokud je jeho pořadí výskytu < total played
-  const pairSeen = {};
-  const groupStatus = groupItems.map(s => {
-    const k = [s.p1, s.p2].sort().join('|');
-    const seen = pairSeen[k] || 0;
-    pairSeen[k] = seen + 1;
-    return seen < (pairCount[k] || 0); // true = odehráno
-  });
-
-  // Aktuální zápas (zelený) = první neodehraný
+  const groupStatus = groupItems.map(s => !!groupMatchesByKey[`${s.p1}|${s.p2}`]);
   const currentGroupIdx = groupStatus.findIndex(p => !p);
 
-  // SCHEDULE rozdělit na sekce
   const groupHtml = groupItems.map((m, i) => {
     const p1 = getP(m.p1), p2 = getP(m.p2);
     const isPlayed = groupStatus[i];
     const isCurrent = i === currentGroupIdx && !isPlayed;
     return `<div class="sched-item clickable${isCurrent ? ' current' : isPlayed ? ' played' : ''}"
-      onclick="${isPlayed ? '' : `setPendingMatch('${m.p1}','${m.p2}','group','Skupina')`}">
+      onclick="clickScheduleSlot('${m.p1}','${m.p2}','group','Skupina')">
       <span class="sched-num">${i+1}</span>
       <div class="sched-player">
         <div>${p1.name}</div>
@@ -1810,10 +1882,44 @@ function renderClBasicSchedule() {
   renderClBasicBracket(semiItems, thirdItem, finalItem);
 }
 
-function matchForSchedule(schedItem, phase) {
-  if (!schedItem) return null;
-  const k = [schedItem.p1, schedItem.p2].sort().join('|');
-  return matches.find(m => m.phase === phase && [m.p1, m.p2].sort().join('|') === k);
+// Univerzální click handler — pokud match existuje, otevři edit; jinak prefill formuláře
+function clickScheduleSlot(p1, p2, phase, label) {
+  const existing = matches.find(m =>
+    m.p1 === p1 && m.p2 === p2 && (m.phase || 'group') === (phase || 'group')
+  );
+  if (existing) {
+    openEdit(existing.id);
+  } else {
+    setPendingMatch(p1, p2, phase, label);
+  }
+}
+
+// Najdi match přesně podle p1/p2 pořadí
+function findExactMatch(p1, p2, phase) {
+  return matches.find(m => m.p1 === p1 && m.p2 === p2 && (m.phase || 'group') === (phase || 'group'));
+}
+
+// Agregát pro 2-leg SF
+function computeAggregate(playerA, playerB) {
+  const ms = matches.filter(m =>
+    m.phase === 'semi' &&
+    ((m.p1 === playerA && m.p2 === playerB) || (m.p1 === playerB && m.p2 === playerA))
+  );
+  if (ms.length === 0) return { played: 0, total: 2, both: false };
+  let aScore = 0, bScore = 0;
+  ms.forEach(m => {
+    if (m.p1 === playerA) { aScore += m.g1; bScore += m.g2; }
+    else { aScore += m.g2; bScore += m.g1; }
+  });
+  return {
+    played: ms.length,
+    total: 2,
+    both: ms.length >= 2,
+    tied: ms.length >= 2 && aScore === bScore,
+    aScore, bScore,
+    winner: aScore > bScore ? playerA : playerB,
+    loser: aScore > bScore ? playerB : playerA,
+  };
 }
 
 function renderClBasicBracket(semiItems, thirdItem, finalItem) {
@@ -1821,29 +1927,70 @@ function renderClBasicBracket(semiItems, thirdItem, finalItem) {
   if (!el) return;
   if (!semiItems.length) { el.innerHTML = ''; return; }
 
-  const sf1m = matchForSchedule(semiItems[0], 'semi');
-  const sf2m = matchForSchedule(semiItems[1], 'semi');
-  const thirdM = matchForSchedule(thirdItem, 'third');
-  const finalM = matchForSchedule(finalItem, 'final');
+  // Seskup SF do dvojic (vždy 2 legs per pair)
+  const sfPairs = [];
+  if (semiItems.length === 4) {
+    // Standardní 2-leg formát
+    sfPairs.push({ legs: [semiItems[0], semiItems[1]], label: 'SF1' });
+    sfPairs.push({ legs: [semiItems[2], semiItems[3]], label: 'SF2' });
+  } else if (semiItems.length === 2) {
+    // Legacy single-leg (před upgradem) — funguje, ale agregát bude jen 1 zápas
+    sfPairs.push({ legs: [semiItems[0]], label: 'SF1', singleLeg: true });
+    sfPairs.push({ legs: [semiItems[1]], label: 'SF2', singleLeg: true });
+  }
 
-  function renderBM(schedItem, m, label, allowClick) {
+  function renderLeg(leg, i, pairLabel) {
+    const m = findExactMatch(leg.p1, leg.p2, 'semi');
+    const p1 = getP(leg.p1), p2 = getP(leg.p2);
+    const played = !!m;
+    const cls = played ? '' : 'unplayed';
+    return `<div class="bracket-leg ${cls}"
+      onclick="clickScheduleSlot('${leg.p1}','${leg.p2}','semi','${pairLabel} (${i+1}. zápas)')">
+      <span class="leg-label">${i+1}.</span>
+      <span class="bname">${p1?.name || '?'}</span>
+      <span class="bscore">${played ? `${m.g1}:${m.g2}` : '—:—'}</span>
+      <span class="bname right">${p2?.name || '?'}</span>
+    </div>`;
+  }
+
+  function renderPair(pair) {
+    const legsHtml = pair.legs.map((leg, i) => renderLeg(leg, i, pair.label)).join('');
+    const agg = computeAggregate(pair.legs[0].p1, pair.legs[0].p2);
+    let aggHtml = '';
+    if (agg.both) {
+      if (agg.tied) {
+        aggHtml = `<div class="bracket-aggregate tied">⚠️ Souhrn ${agg.aScore}:${agg.bScore} — REMÍZA<br>Klikni na zápas a uprav skóre</div>`;
+      } else {
+        const wn = getP(agg.winner)?.name;
+        const hi = Math.max(agg.aScore, agg.bScore);
+        const lo = Math.min(agg.aScore, agg.bScore);
+        aggHtml = `<div class="bracket-aggregate">Souhrn ${hi}:${lo} → <strong>${wn}</strong> postupuje</div>`;
+      }
+    } else {
+      aggHtml = `<div class="bracket-aggregate" style="font-style:italic">${agg.played}/${pair.total || 2} zápasů</div>`;
+    }
+    return `<div class="bracket-pair">
+      <div class="bracket-pair-title">${pair.label}${pair.singleLeg ? '' : ' (2 zápasy)'}</div>
+      ${legsHtml}
+      ${aggHtml}
+    </div>`;
+  }
+
+  function renderSingleMatch(schedItem, phase, label) {
     if (!schedItem) {
       return `<div class="bracket-match pending">
         <div class="bracket-mlabel">${label}</div>
         <div class="bracket-line"><span class="bname" style="color:var(--text-dim)">— čeká —</span></div>
       </div>`;
     }
+    const m = findExactMatch(schedItem.p1, schedItem.p2, phase);
     const p1 = getP(schedItem.p1), p2 = getP(schedItem.p2);
     const played = !!m;
     const tie = played && m.g1 === m.g2;
     const win1 = played && !tie && m.g1 > m.g2;
     const win2 = played && !tie && m.g2 > m.g1;
-    const phaseKey = schedItem.phase;
-    const clickAttr = (allowClick && !played)
-      ? `onclick="setPendingMatch('${schedItem.p1}','${schedItem.p2}','${phaseKey}','${label}')"`
-      : '';
-    const cls = played ? '' : (allowClick ? 'clickable current' : 'pending');
-    return `<div class="bracket-match ${cls}" ${clickAttr}>
+    return `<div class="bracket-match clickable${played ? '' : ' current'}"
+      onclick="clickScheduleSlot('${schedItem.p1}','${schedItem.p2}','${phase}','${label}')">
       <div class="bracket-mlabel">${label}</div>
       <div class="bracket-line">
         <span class="bname ${win1 ? 'winner' : (win2 ? 'loser' : '')}">${p1?.name || '?'}</span>
@@ -1856,19 +2003,19 @@ function renderClBasicBracket(semiItems, thirdItem, finalItem) {
     </div>`;
   }
 
-  // SF jsou klikatelné, F/3rd jen pokud vygenerovány
   el.innerHTML = `
     <div class="section-title">🏆 Play-off</div>
     <div class="cl-bracket">
       <div class="bracket-stage">
         <div class="bracket-title">Semifinále</div>
-        ${renderBM(semiItems[0], sf1m, 'SF1', true)}
-        ${renderBM(semiItems[1], sf2m, 'SF2', true)}
+        <div class="bracket-pairs">
+          ${sfPairs.map(renderPair).join('')}
+        </div>
       </div>
       <div class="bracket-stage">
         <div class="bracket-title">Finále / 3. místo</div>
-        ${renderBM(finalItem, finalM, 'Finále', true)}
-        ${renderBM(thirdItem, thirdM, 'O 3. místo', true)}
+        ${renderSingleMatch(finalItem, 'final', 'Finále')}
+        ${renderSingleMatch(thirdItem, 'third', 'O 3. místo')}
       </div>
     </div>
   `;
@@ -1891,43 +2038,43 @@ async function advanceClBasic() {
   const groupTotal = schedule.filter(s => s.phase === 'group').length;
   const groupPlayed = matches.filter(m => (m.phase || 'group') === 'group').length;
 
-  // 1) Po dohrání group → vygeneruj SF (pokud ještě nejsou)
+  // 1) Po dohrání group → vygeneruj 2 zápasy SF1 + 2 zápasy SF2
   const hasSF = schedule.some(s => s.phase === 'semi');
   if (groupPlayed >= groupTotal && !hasSF) {
     const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
     const standings = calcStandingsFrom(groupMatches, t.players);
     if (standings.length >= 4) {
+      const s = standings;
       schedule.push(
-        { p1: standings[0].id, p2: standings[3].id, phase: 'semi' },
-        { p1: standings[1].id, p2: standings[2].id, phase: 'semi' },
+        // SF1: 1. vs 4. — 2 zápasy (home + away)
+        { p1: s[0].id, p2: s[3].id, phase: 'semi' },
+        { p1: s[3].id, p2: s[0].id, phase: 'semi' },
+        // SF2: 2. vs 3. — 2 zápasy (home + away)
+        { p1: s[1].id, p2: s[2].id, phase: 'semi' },
+        { p1: s[2].id, p2: s[1].id, phase: 'semi' },
       );
       await tournamentDoc.set({ ...t, schedule, state: { stage: 'semi' } });
       await scheduleDoc.set({ pairs: schedule });
-      showToast('🏆 Group hotov! Semifinále vygenerováno');
+      showToast('🏆 Group hotov! Semifinále (2 zápasy) vygenerováno');
       return;
     }
   }
 
-  // 2) Po dohrání obou SF → vygeneruj F + 3rd
+  // 2) Po dohrání všech 4 SF → vygeneruj F + 3rd (pouze pokud agregát není remíza)
   const semiItems = schedule.filter(s => s.phase === 'semi');
   const semiMatches = matches.filter(m => m.phase === 'semi');
   const hasFinal = schedule.some(s => s.phase === 'final');
-  if (semiItems.length === 2 && semiMatches.length >= 2 && !hasFinal) {
-    // Najdi výsledky pro každý SF
-    const sf1m = matchForSchedule(semiItems[0], 'semi');
-    const sf2m = matchForSchedule(semiItems[1], 'semi');
-    if (!sf1m || !sf2m) return;
-    if (sf1m.g1 === sf1m.g2 || sf2m.g1 === sf2m.g2) {
-      showToast('⚠️ V semifinále nemůže být remíza — uprav skóre');
+  if (semiItems.length === 4 && semiMatches.length >= 4 && !hasFinal) {
+    const agg1 = computeAggregate(semiItems[0].p1, semiItems[0].p2);
+    const agg2 = computeAggregate(semiItems[2].p1, semiItems[2].p2);
+    if (!agg1.both || !agg2.both) return;
+    if (agg1.tied || agg2.tied) {
+      // Žádný toast, varování je v bracketu
       return;
     }
-    const w1 = sf1m.g1 > sf1m.g2 ? sf1m.p1 : sf1m.p2;
-    const l1 = sf1m.g1 > sf1m.g2 ? sf1m.p2 : sf1m.p1;
-    const w2 = sf2m.g1 > sf2m.g2 ? sf2m.p1 : sf2m.p2;
-    const l2 = sf2m.g1 > sf2m.g2 ? sf2m.p2 : sf2m.p1;
     schedule.push(
-      { p1: w1, p2: w2, phase: 'final' },
-      { p1: l1, p2: l2, phase: 'third' },
+      { p1: agg1.winner, p2: agg2.winner, phase: 'final' },
+      { p1: agg1.loser,  p2: agg2.loser,  phase: 'third' },
     );
     await tournamentDoc.set({ ...t, schedule, state: { stage: 'final' } });
     await scheduleDoc.set({ pairs: schedule });
