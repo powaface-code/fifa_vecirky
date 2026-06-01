@@ -1618,17 +1618,19 @@ function generateClBasicSchedule(playerIds) {
   return pairs.map(([p1, p2]) => ({ p1, p2, phase: 'group' }));
 }
 
-// 2v2 týmový režim — 8 zápasů dvojic, týmy z hlavních klubů hráčů
+// 2v2 týmový režim — 8 zápasů dvojic
+// Pravidla:
+// - Tým dvojice = klub JEDNOHO z těch 2 hráčů (player ID = club ID)
+// - Vyrovnaná distribuce týmů (~4 použití per tým)
+// - Žádná dvojice nehraje stejným týmem 2× za sebou
 function generate2v2Schedule(playerIds) {
   if (playerIds.length !== 4) return [];
   const [A, B, C, D] = playerIds;
-  // 3 unikátní rozdělení dvojic
   const combos = [
     [[A,B],[C,D]],
     [[A,C],[B,D]],
     [[A,D],[B,C]],
   ];
-  const teams = playerIds.slice(); // 4 klubové ID (player IDs slouží jako club IDs)
 
   // Náhodně promíchej pořadí cyklování combos
   const order = [0, 1, 2];
@@ -1636,18 +1638,21 @@ function generate2v2Schedule(playerIds) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
-  // Random náhodně vybere první 8 dvojic z [0,1,2,0,1,2,0,1,...]
   const matchPlan = [];
   for (let i = 0; i < 8; i++) matchPlan.push(combos[order[i % 3]]);
 
   const lastTeamByPairKey = {};
   const teamUsage = {};
-  teams.forEach(t => teamUsage[t] = 0);
+  playerIds.forEach(t => teamUsage[t] = 0);
   const pairKey = pair => [...pair].sort().join('|');
 
-  function pickTeam(forKey, exclude) {
-    const candidates = teams.filter(t => t !== lastTeamByPairKey[forKey] && !exclude.includes(t));
-    const pool = candidates.length > 0 ? candidates : teams.filter(t => !exclude.includes(t));
+  // Tým musí být klub jednoho z hráčů dvojice (= player ID je club ID)
+  function pickTeamFromPair(pair, forKey) {
+    const allowed = [...pair]; // např. ['tom','jirik'] → výběr mezi Real Madrid a Liverpool
+    // Anti-consecutive: vyhni se tomu, co tahle dvojice hrála naposledy
+    const candidates = allowed.filter(t => t !== lastTeamByPairKey[forKey]);
+    const pool = candidates.length > 0 ? candidates : allowed;
+    // Vyrovnanost: preferuj nejméně použitý tým
     const minUsage = Math.min(...pool.map(t => teamUsage[t]));
     const tied = pool.filter(t => teamUsage[t] === minUsage);
     return tied[Math.floor(Math.random() * tied.length)];
@@ -1656,9 +1661,8 @@ function generate2v2Schedule(playerIds) {
   const result = [];
   for (const [pairA, pairB] of matchPlan) {
     const keyA = pairKey(pairA), keyB = pairKey(pairB);
-    // Také: pair shouldn't have just played same team — switch teams between pairs
-    const teamA = pickTeam(keyA, []);
-    const teamB = pickTeam(keyB, [teamA]);
+    const teamA = pickTeamFromPair(pairA, keyA);
+    const teamB = pickTeamFromPair(pairB, keyB);
     teamUsage[teamA]++; teamUsage[teamB]++;
     lastTeamByPairKey[keyA] = teamA;
     lastTeamByPairKey[keyB] = teamB;
