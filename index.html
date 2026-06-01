@@ -786,21 +786,37 @@
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    min-height: 44px;
+    min-height: 50px;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.95rem;
-    transition: all 0.2s;
+    transition: all 0.15s;
+    user-select: none;
   }
   .player-check.checked {
     border-color: var(--green-light);
-    background: rgba(35,160,80,0.1);
+    background: rgba(35,160,80,0.18);
+    box-shadow: 0 0 0 1px var(--green-light) inset;
   }
-  .player-check input {
-    width: 20px; height: 20px;
-    accent-color: var(--green-light);
-    pointer-events: none;
+  .pc-box {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    border: 2px solid var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    background: rgba(0,0,0,0.2);
   }
-  .player-check .pname { flex: 1; color: var(--text); }
+  .pc-box.on {
+    background: var(--green-light);
+    border-color: var(--green-light);
+    color: #fff;
+  }
+  .player-check .pname { flex: 1; color: var(--text); font-weight: 600; }
   .player-check .pclub { color: var(--text-dim); font-size: 0.85rem; }
 
   /* TOURNAMENT INFO BAR */
@@ -1264,11 +1280,12 @@ function selectTournamentType(type) {
 function renderPlayerChecks() {
   document.getElementById('playerChecks').innerHTML = PLAYERS.map(p => {
     const checked = cycle3Selected.includes(p.id);
-    return `<label class="player-check${checked ? ' checked' : ''}" onclick="togglePlayerCheck('${p.id}')">
-      <input type="checkbox" ${checked ? 'checked' : ''} readonly>
+    return `<div class="player-check${checked ? ' checked' : ''}" onclick="togglePlayerCheck('${p.id}')">
+      <div class="pc-box${checked ? ' on' : ''}">${checked ? '✓' : ''}</div>
+      ${badge(p, 26)}
       <span class="pname">${p.name}</span>
       <span class="pclub">${p.club}</span>
-    </label>`;
+    </div>`;
   }).join('');
 }
 function togglePlayerCheck(pid) {
