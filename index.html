@@ -1386,12 +1386,7 @@
     </div>
 
     <div class="section-title"><span id="cumulativeFilterLabel">🏆 Celková tabulka</span></div>
-    <div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
-      <table class="standings-table">
-        <thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>G+</th><th>G−</th><th>GR</th><th>B</th></tr></thead>
-        <tbody id="cumulativeStandingsBody"></tbody>
-      </table>
-    </div>
+    <div id="historyMainContent"></div>
     <div class="section-title">📚 Archiv večírků</div>
     <div class="party-list" id="partyList"></div>
   </div>
@@ -2295,6 +2290,83 @@ function partyPlayers(p) {
   return [...s];
 }
 
+// Pro cl_basic — z final + 3rd matchů odvoď umístění 1.-4. v daném večírku
+function computeClBasicPlacements(party) {
+  const ms = party.matches || [];
+  const finalM = ms.find(m => m.phase === 'final');
+  const thirdM = ms.find(m => m.phase === 'third');
+  if (!finalM || !thirdM) return null;
+  if (finalM.g1 === finalM.g2) return null;
+  if (thirdM.g1 === thirdM.g2) return null;
+  const first  = finalM.g1 > finalM.g2 ? finalM.p1 : finalM.p2;
+  const second = finalM.g1 > finalM.g2 ? finalM.p2 : finalM.p1;
+  const third  = thirdM.g1 > thirdM.g2 ? thirdM.p1 : thirdM.p2;
+  const fourth = thirdM.g1 > thirdM.g2 ? thirdM.p2 : thirdM.p1;
+  return [first, second, third, fourth];
+}
+
+function renderClBasicPlacementsHTML(parties, playerIds) {
+  // Inicializuj tally
+  const tally = {};
+  playerIds.forEach(id => tally[id] = { id, p1:0, p2:0, p3:0, p4:0, total:0 });
+  let counted = 0, incomplete = 0;
+  parties.forEach(p => {
+    const places = computeClBasicPlacements(p);
+    if (!places) { incomplete++; return; }
+    counted++;
+    places.forEach((pid, idx) => {
+      if (!tally[pid]) tally[pid] = { id: pid, p1:0, p2:0, p3:0, p4:0, total:0 };
+      tally[pid][`p${idx+1}`]++;
+      tally[pid].total++;
+    });
+  });
+  const rows = Object.values(tally)
+    .filter(r => r.total > 0)
+    .sort((a,b) => b.p1 - a.p1 || b.p2 - a.p2 || b.p3 - a.p3 || b.total - a.total);
+
+  if (!rows.length) {
+    return `<div class="empty-state">Žádný dokončený LM Basic turnaj.${incomplete ? ` (${incomplete} rozehraných)` : ''}</div>`;
+  }
+
+  const rc = ['r1','r2','r3','r4'];
+  const tbody = rows.map((r, i) => {
+    const p = getP(r.id);
+    if (!p) return '';
+    return `<tr>
+      <td><span class="rank-badge ${rc[i] || ''}">${i+1}</span></td>
+      <td><div class="player-cell">${badge(p,26)}<div>
+        <div class="player-name">${p.name} <span style="color:var(--text-dim);font-weight:400;font-size:0.75rem">(${p.club})</span></div>
+      </div></div></td>
+      <td style="color:#f5c842;font-weight:700">${r.p1}</td>
+      <td style="color:#c8c8c8">${r.p2}</td>
+      <td style="color:#cd7f32">${r.p3}</td>
+      <td style="color:var(--text-dim)">${r.p4}</td>
+      <td class="pts">${r.total}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
+      <table class="standings-table">
+        <thead><tr>
+          <th>#</th><th>Hráč</th><th title="1. místo">🥇</th><th title="2. místo">🥈</th><th title="3. místo">🥉</th><th title="4. místo">4.</th><th title="Celkem turnajů">Σ</th>
+        </tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    </div>
+    ${incomplete > 0 ? `<div style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);font-size:0.8rem;margin-top:6px;text-align:center">⚠️ ${incomplete} večírek/y bez kompletního play-off není v tabulce</div>` : ''}
+  `;
+}
+
+function renderStandardStandingsHTML() {
+  return `<div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
+    <table class="standings-table">
+      <thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>G+</th><th>G−</th><th>GR</th><th>B</th></tr></thead>
+      <tbody id="cumulativeStandingsBody"></tbody>
+    </table>
+  </div>`;
+}
+
 function renderHistory() {
   // POUZE zápasy z vybraného typu turnaje — žádné mixování
   const filtered = parties.filter(p => partyType(p) === historyFilter);
@@ -2304,13 +2376,26 @@ function renderHistory() {
   filtered.forEach(p => partyPlayers(p).forEach(pid => playerSet.add(pid)));
   const playerIds = playerSet.size ? [...playerSet] : PLAYERS.map(p=>p.id);
 
-  const allMatches = filtered.flatMap(p => p.matches||[]);
-  renderStandingsTable('cumulativeStandingsBody', allMatches, playerIds);
-
   // Nadpis ukazuje aktuální typ
   const lblEl = document.getElementById('cumulativeFilterLabel');
   const tinfo = TOURNAMENT_TYPES[historyFilter];
-  if (lblEl) lblEl.textContent = `${tinfo?.icon || '🏆'} ${tinfo?.name || 'Tabulka'}`;
+  if (lblEl) {
+    if (historyFilter === 'cl_basic') {
+      lblEl.textContent = `🏆 ${tinfo.name} — umístění`;
+    } else {
+      lblEl.textContent = `${tinfo?.icon || '🏆'} ${tinfo?.name || 'Tabulka'}`;
+    }
+  }
+
+  // Hlavní obsah — placements pro cl_basic, jinak standardní tabulka
+  const mainEl = document.getElementById('historyMainContent');
+  if (historyFilter === 'cl_basic') {
+    mainEl.innerHTML = renderClBasicPlacementsHTML(filtered, playerIds);
+  } else {
+    mainEl.innerHTML = renderStandardStandingsHTML();
+    const allMatches = filtered.flatMap(p => p.matches||[]);
+    renderStandingsTable('cumulativeStandingsBody', allMatches, playerIds);
+  }
 
   const el = document.getElementById('partyList');
   if (!filtered.length) {
