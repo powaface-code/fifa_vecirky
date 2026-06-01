@@ -551,7 +551,66 @@
     letter-spacing: 1px;
   }
   .party-meta { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
-  .party-arrow { color: var(--gold); font-size: 1.4rem; }
+  .party-arrow { color: var(--gold); font-size: 1.4rem; flex-shrink: 0; }
+  .party-info { flex: 1; min-width: 0; cursor: pointer; }
+  .party-delete {
+    background: transparent;
+    border: 1px solid rgba(214,59,59,0.3);
+    color: var(--red);
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-right: 8px;
+    touch-action: manipulation;
+    transition: all 0.15s;
+  }
+  .party-delete:active { background: rgba(214,59,59,0.18); }
+
+  /* HISTORY FILTER PILLS */
+  .history-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .history-filter::-webkit-scrollbar { display: none; }
+  .hf-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 6px 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 34px;
+    touch-action: manipulation;
+    transition: all 0.15s;
+  }
+  .hf-btn.active {
+    background: var(--gold);
+    color: #111;
+    border-color: var(--gold);
+  }
+  .history-filter-section {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin: 18px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
 
   /* DETAIL VEČÍRKU */
   .back-bar {
@@ -1068,7 +1127,17 @@
 <!-- HISTORY VIEW -->
 <div id="view-history" style="display:none">
   <div class="container">
-    <div class="section-title">🏆 Celková tabulka</div>
+    <div class="section-title">📊 Filtr podle typu</div>
+    <div class="history-filter" id="historyFilter">
+      <button class="hf-btn active" data-filter="all" onclick="setHistoryFilter('all')">📚 Vše</button>
+      <button class="hf-btn" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
+      <button class="hf-btn" data-filter="cycle3" onclick="setHistoryFilter('cycle3')">🔁 3 hráči</button>
+      <button class="hf-btn" data-filter="cl_basic" onclick="setHistoryFilter('cl_basic')">⚽ LM Basic</button>
+      <button class="hf-btn" data-filter="cl_full" onclick="setHistoryFilter('cl_full')">🏆 LM Full</button>
+      <button class="hf-btn" data-filter="team2v2" onclick="setHistoryFilter('team2v2')">👥 2v2</button>
+    </div>
+
+    <div class="section-title">🏆 Celková tabulka <span id="cumulativeFilterLabel" style="font-size:0.8rem;color:var(--text-dim);letter-spacing:1px"></span></div>
     <div style="overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)">
       <table class="standings-table">
         <thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>G+</th><th>G−</th><th>GR</th><th>B</th></tr></thead>
@@ -1340,6 +1409,7 @@ async function confirmTournamentArchive() {
     date,
     closedAt: Date.now(),
     tournamentType: currentTournament?.type || 'cycle4',
+    players: currentTournament?.players || PLAYERS.map(p=>p.id),
     matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
   });
   // Smaž aktuální zápasy
@@ -1602,6 +1672,7 @@ async function confirmCloseParty() {
     date,
     closedAt: Date.now(),
     tournamentType: currentTournament?.type || 'cycle4',
+    players: currentTournament?.players || PLAYERS.map(p=>p.id),
     matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
@@ -1616,22 +1687,71 @@ async function confirmCloseParty() {
   showTab('history');
 }
 
+let historyFilter = 'all';
+
+function setHistoryFilter(f) {
+  historyFilter = f;
+  document.querySelectorAll('.hf-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.filter === f)
+  );
+  renderHistory();
+}
+
+function partyType(p) { return p.tournamentType || 'cycle4'; }
+function partyPlayers(p) {
+  if (p.players?.length) return p.players;
+  // Backward compat: odvodit z matches
+  const s = new Set();
+  (p.matches||[]).forEach(m => { s.add(m.p1); s.add(m.p2); });
+  return [...s];
+}
+
 function renderHistory() {
-  const allMatches = parties.flatMap(p => p.matches||[]);
-  renderStandingsTable('cumulativeStandingsBody', allMatches);
+  const filtered = historyFilter === 'all'
+    ? parties
+    : parties.filter(p => partyType(p) === historyFilter);
+
+  // Hráči zúčastnění v daném filtru
+  const playerSet = new Set();
+  filtered.forEach(p => partyPlayers(p).forEach(pid => playerSet.add(pid)));
+  const playerIds = playerSet.size ? [...playerSet] : PLAYERS.map(p=>p.id);
+
+  const allMatches = filtered.flatMap(p => p.matches||[]);
+  renderStandingsTable('cumulativeStandingsBody', allMatches, playerIds);
+
+  // Label u nadpisu
+  const lblEl = document.getElementById('cumulativeFilterLabel');
+  if (lblEl) {
+    if (historyFilter === 'all') lblEl.textContent = '';
+    else lblEl.textContent = `· ${TOURNAMENT_TYPES[historyFilter]?.name || historyFilter}`;
+  }
+
   const el = document.getElementById('partyList');
-  if (!parties.length) {
-    el.innerHTML = '<div class="empty-state">Zatím žádné archivované večírky.</div>';
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty-state">Žádné archivované večírky v této kategorii.</div>';
     return;
   }
-  el.innerHTML = [...parties].sort((a,b)=>b.closedAt-a.closedAt).map(p=>`
-    <div class="party-item" onclick="openPartyDetail('${p.id}')">
-      <div>
+  el.innerHTML = [...filtered].sort((a,b)=>b.closedAt-a.closedAt).map(p=>{
+    const tt = partyType(p);
+    const tinfo = TOURNAMENT_TYPES[tt] || TOURNAMENT_TYPES.cycle4;
+    return `<div class="party-item">
+      <div class="party-info" onclick="openPartyDetail('${p.id}')">
         <div class="party-date">📅 ${formatDate(p.date)}</div>
-        <div class="party-meta">${(p.matches||[]).length} zápasů</div>
+        <div class="party-meta">${tinfo.icon} ${tinfo.name} · ${(p.matches||[]).length} zápasů</div>
       </div>
-      <span class="party-arrow">›</span>
-    </div>`).join('');
+      <button class="party-delete" onclick="deleteParty('${p.id}')" title="Smazat">🗑️</button>
+      <span class="party-arrow" onclick="openPartyDetail('${p.id}')">›</span>
+    </div>`;
+  }).join('');
+}
+
+async function deleteParty(id) {
+  const p = parties.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Smazat večírek z ${formatDate(p.date)}?\nTato akce je nevratná.`)) return;
+  if (!confirm('Druhé potvrzení: data večírku budou trvale ztracena. Pokračovat?')) return;
+  await partiesCol.doc(id).delete();
+  showToast('🗑️ Večírek smazán');
 }
 
 function openPartyDetail(partyId) {
@@ -1700,6 +1820,10 @@ function init() {
   });
   partiesCol.orderBy('closedAt').onSnapshot(snapshot => {
     parties = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+    // Pokud je History tab aktivní, refresh
+    if (document.getElementById('view-history').style.display !== 'none') {
+      renderHistory();
+    }
   });
   scheduleDoc.onSnapshot(snap => {
     if (snap.exists) {
