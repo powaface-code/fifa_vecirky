@@ -912,6 +912,167 @@
     min-height: 50px;
     touch-action: manipulation;
   }
+
+  /* LM BASIC — group labels & phase tags */
+  .sched-group-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 2.5px;
+    color: var(--gold);
+    margin: 18px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sched-group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-dark), transparent);
+  }
+  .sched-item.clickable { cursor: pointer; }
+  .sched-item.clickable:active {
+    background: rgba(245,200,66,0.12);
+    border-color: var(--gold);
+  }
+  .sched-item.current.clickable {
+    /* zvýraznění už má .current — jen kurzor */
+  }
+  .sched-item .sched-tag {
+    grid-column: 1 / 2;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+  .sched-form-hint {
+    background: rgba(245,200,66,0.07);
+    border: 1px dashed rgba(245,200,66,0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .pending-match-badge {
+    background: rgba(35,160,80,0.15);
+    border: 1px solid var(--green-light);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .pending-match-badge .pm-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    color: var(--green-light);
+    background: rgba(35,160,80,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .pending-match-badge .pm-cancel {
+    background: transparent;
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    touch-action: manipulation;
+  }
+
+  /* BRACKET vizualizace (LM Basic) */
+  .cl-bracket {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .bracket-stage {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bracket-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .bracket-match {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bracket-match.clickable:active {
+    background: rgba(245,200,66,0.1);
+    border-color: var(--gold);
+  }
+  .bracket-match.current {
+    border-color: #00e676;
+    box-shadow: 0 0 8px rgba(0,230,118,0.3);
+  }
+  .bracket-match.pending {
+    opacity: 0.55;
+    cursor: default;
+  }
+  .bracket-mlabel {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 2px;
+  }
+  .bracket-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1px 0;
+    gap: 6px;
+  }
+  .bracket-line .bname {
+    flex: 1;
+    color: var(--text);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bracket-line .bname.winner { color: var(--gold); }
+  .bracket-line .bname.loser { color: var(--text-dim); text-decoration: line-through; opacity: 0.7; }
+  .bracket-line .bscore {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    min-width: 16px;
+    text-align: right;
+  }
+  .bracket-line .bscore.dash { color: var(--text-dim); }
 </style>
 </head>
 <body>
@@ -938,9 +1099,11 @@
 
   <div class="section-title">📋 Rozlosování</div>
   <div class="schedule-list" id="scheduleList"></div>
+  <div id="bracketContainer"></div>
 
   <div class="section-title">⚽ Přidat zápas</div>
   <div class="form-card">
+    <div id="pendingMatchBadge"></div>
     <div class="players-row">
       <div class="fgroup">
         <label>Hráč 1 (domácí)</label>
@@ -1199,7 +1362,7 @@ const TOURNAMENT_TYPES = {
   cl_full:  { name: 'Liga mistrů Full',       icon: '🏆' },
   team2v2:  { name: '2v2 týmový režim',       icon: '👥' },
 };
-const SUPPORTED_TYPES = ['cycle3', 'cycle4']; // Fáze 1: jen tyto fungují
+const SUPPORTED_TYPES = ['cycle3', 'cycle4', 'cl_basic']; // Fáze 1+2
 
 // Cyklický rozpis — každý s každým, anti-consecutive (max 2 v řadě s wrap-around)
 function generateCycleSchedule(playerIds) {
@@ -1233,13 +1396,45 @@ function generateSchedule() {
   return generateCycleSchedule(PLAYERS.map(p => p.id));
 }
 
+// Liga mistrů Basic — každý pár 2× (home & away) = 12 zápasů, anti-consecutive (max 2 v řadě s wrap-around)
+function generateClBasicSchedule(playerIds) {
+  const pairs = [];
+  for (let i = 0; i < playerIds.length; i++) {
+    for (let j = i+1; j < playerIds.length; j++) {
+      pairs.push([playerIds[i], playerIds[j]]);
+      pairs.push([playerIds[j], playerIds[i]]); // reverse pro 2. zápas
+    }
+  }
+  const N = pairs.length;
+  for (let attempt = 0; attempt < 3000; attempt++) {
+    for (let i = N-1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i+1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    let valid = true;
+    for (let i = 0; i < N; i++) {
+      const prev1 = pairs[(i-1+N) % N];
+      const prev2 = pairs[(i-2+N) % N];
+      for (const pid of pairs[i]) {
+        if (prev1.includes(pid) && prev2.includes(pid)) { valid = false; break; }
+      }
+      if (!valid) break;
+    }
+    if (valid) break;
+  }
+  return pairs.map(([p1, p2]) => ({ p1, p2, phase: 'group' }));
+}
+
 // Generátor turnaje podle typu
 function buildTournament(type, playerIds) {
   const base = { type, players: playerIds, startedAt: Date.now() };
   if (type === 'cycle3' || type === 'cycle4') {
     return { ...base, schedule: generateCycleSchedule(playerIds) };
   }
-  // TODO: Fáze 2-4 (cl_basic, cl_full, team2v2)
+  if (type === 'cl_basic') {
+    return { ...base, schedule: generateClBasicSchedule(playerIds), state: { stage: 'group' } };
+  }
+  // TODO: Fáze 3-4 (cl_full, team2v2)
   return { ...base, schedule: generateCycleSchedule(playerIds) };
 }
 
@@ -1471,26 +1666,76 @@ function badge(p, sz=30) {
   return `<img class="badge" src="${p.logo}?v=3" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
 }
 
-function renderSchedule() {
-  const N = SCHEDULE.length;
-  if (!N) { document.getElementById('scheduleList').innerHTML = ''; return; }
+// ── PENDING MATCH (kliknutí ze schedule předvyplní formulář) ────────────────
+let pendingMatch = null; // { p1, p2, phase, label? }
+function setPendingMatch(p1, p2, phase, label) {
+  pendingMatch = { p1, p2, phase: phase || null, label: label || null };
+  document.getElementById('fP1').value = p1;
+  fillSelect('fP2', p2, p1);
+  document.getElementById('fP2').value = p2;
+  renderPendingMatchBadge();
+  // scroll na formulář
+  setTimeout(() => {
+    document.querySelector('#view-current .form-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+function clearPendingMatch() {
+  pendingMatch = null;
+  renderPendingMatchBadge();
+}
+function renderPendingMatchBadge() {
+  const el = document.getElementById('pendingMatchBadge');
+  if (!el) return;
+  if (!pendingMatch) { el.innerHTML = ''; return; }
+  const p1 = getP(pendingMatch.p1), p2 = getP(pendingMatch.p2);
+  const tag = pendingMatch.label || (pendingMatch.phase === 'group' ? 'Skupina' : phaseLabel(pendingMatch.phase));
+  el.innerHTML = `<div class="pending-match-badge">
+    <span class="pm-label">${tag}</span>
+    <span style="flex:1">${p1?.name} vs ${p2?.name}</span>
+    <button class="pm-cancel" onclick="clearPendingMatch()" title="Zrušit výběr">✕</button>
+  </div>`;
+}
+function phaseLabel(phase) {
+  return ({
+    group: 'Skupina', semi: 'Semifinále', third: 'O 3. místo', final: 'Finále',
+    r16: 'Osmifinále', qf: 'Čtvrtfinále', sf: 'Semifinále', f: 'Finále'
+  })[phase] || '';
+}
 
-  // Počet odehraných zápasů pro každý pár (nezáleží na pořadí domácí/hosté)
+// ── SCHEDULE RENDER — dispatcher podle typu ──────────────────────────────────
+function renderSchedule() {
+  const t = currentTournament;
+  const list = document.getElementById('scheduleList');
+  const bracket = document.getElementById('bracketContainer');
+  if (!t || !SCHEDULE.length) {
+    list.innerHTML = '';
+    if (bracket) bracket.innerHTML = '';
+    return;
+  }
+  if (t.type === 'cl_basic') {
+    renderClBasicSchedule();
+  } else {
+    renderCycleSchedule();
+    if (bracket) bracket.innerHTML = '';
+  }
+}
+
+// Cyklus (cycle3/cycle4) — opakovaný rozpis s wrap-around
+function renderCycleSchedule() {
+  const N = SCHEDULE.length;
+  // Počet odehraných zápasů pro každý pár (nezáleží na pořadí)
   const pairCount = {};
   matches.forEach(m => {
     const key = [m.p1, m.p2].sort().join('|');
     pairCount[key] = (pairCount[key] || 0) + 1;
   });
-
   const counts = SCHEDULE.map(m => pairCount[[m.p1, m.p2].sort().join('|')] || 0);
-  // Aktuální kolo = minimum přes všechny zápasy
   const minCount = Math.min(...counts);
-  // Aktuální zápas = první, který v tomto kole ještě nebyl odehrán
   const currentIdx = counts.findIndex(c => c === minCount);
 
   document.getElementById('scheduleList').innerHTML = SCHEDULE.map((m, i) => {
     const p1 = getP(m.p1), p2 = getP(m.p2);
-    const isPlayed  = counts[i] > minCount; // odehráno v aktuálním kole
+    const isPlayed  = counts[i] > minCount;
     const isCurrent = i === currentIdx;
     return `<div class="sched-item${isCurrent ? ' current' : isPlayed ? ' played' : ''}">
       <span class="sched-num">${i+1}</span>
@@ -1505,6 +1750,189 @@ function renderSchedule() {
       </div>
     </div>`;
   }).join('');
+}
+
+// Liga mistrů Basic — group + play-off, lineární progres (každý slot 1×)
+function renderClBasicSchedule() {
+  // Per-occurrence progres: pair se může objevit vícekrát (home/away)
+  // a zápas v matches s touhle dvojicí "spotřebuje" jeden výskyt v pořadí
+  const groupItems = SCHEDULE.filter(s => s.phase === 'group');
+  const semiItems  = SCHEDULE.filter(s => s.phase === 'semi');
+  const thirdItem  = SCHEDULE.find(s => s.phase === 'third');
+  const finalItem  = SCHEDULE.find(s => s.phase === 'final');
+
+  // Spočítej kolikrát byl pár [p1,p2] odehrán v group fázi
+  const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
+  const pairCount = {};
+  groupMatches.forEach(m => {
+    const k = [m.p1, m.p2].sort().join('|');
+    pairCount[k] = (pairCount[k] || 0) + 1;
+  });
+
+  // Pro každý group slot: "consumed" pokud je jeho pořadí výskytu < total played
+  const pairSeen = {};
+  const groupStatus = groupItems.map(s => {
+    const k = [s.p1, s.p2].sort().join('|');
+    const seen = pairSeen[k] || 0;
+    pairSeen[k] = seen + 1;
+    return seen < (pairCount[k] || 0); // true = odehráno
+  });
+
+  // Aktuální zápas (zelený) = první neodehraný
+  const currentGroupIdx = groupStatus.findIndex(p => !p);
+
+  // SCHEDULE rozdělit na sekce
+  const groupHtml = groupItems.map((m, i) => {
+    const p1 = getP(m.p1), p2 = getP(m.p2);
+    const isPlayed = groupStatus[i];
+    const isCurrent = i === currentGroupIdx && !isPlayed;
+    return `<div class="sched-item clickable${isCurrent ? ' current' : isPlayed ? ' played' : ''}"
+      onclick="${isPlayed ? '' : `setPendingMatch('${m.p1}','${m.p2}','group','Skupina')`}">
+      <span class="sched-num">${i+1}</span>
+      <div class="sched-player">
+        <div>${p1.name}</div>
+        ${badge(p1,28)}
+      </div>
+      <div class="sched-vs">VS</div>
+      <div class="sched-player right">
+        ${badge(p2,28)}
+        <div>${p2.name}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('scheduleList').innerHTML = `
+    <div class="sched-group-label">⚽ Skupina (${groupStatus.filter(Boolean).length}/${groupItems.length})</div>
+    ${groupHtml}
+  `;
+
+  // Bracket
+  renderClBasicBracket(semiItems, thirdItem, finalItem);
+}
+
+function matchForSchedule(schedItem, phase) {
+  if (!schedItem) return null;
+  const k = [schedItem.p1, schedItem.p2].sort().join('|');
+  return matches.find(m => m.phase === phase && [m.p1, m.p2].sort().join('|') === k);
+}
+
+function renderClBasicBracket(semiItems, thirdItem, finalItem) {
+  const el = document.getElementById('bracketContainer');
+  if (!el) return;
+  if (!semiItems.length) { el.innerHTML = ''; return; }
+
+  const sf1m = matchForSchedule(semiItems[0], 'semi');
+  const sf2m = matchForSchedule(semiItems[1], 'semi');
+  const thirdM = matchForSchedule(thirdItem, 'third');
+  const finalM = matchForSchedule(finalItem, 'final');
+
+  function renderBM(schedItem, m, label, allowClick) {
+    if (!schedItem) {
+      return `<div class="bracket-match pending">
+        <div class="bracket-mlabel">${label}</div>
+        <div class="bracket-line"><span class="bname" style="color:var(--text-dim)">— čeká —</span></div>
+      </div>`;
+    }
+    const p1 = getP(schedItem.p1), p2 = getP(schedItem.p2);
+    const played = !!m;
+    const tie = played && m.g1 === m.g2;
+    const win1 = played && !tie && m.g1 > m.g2;
+    const win2 = played && !tie && m.g2 > m.g1;
+    const phaseKey = schedItem.phase;
+    const clickAttr = (allowClick && !played)
+      ? `onclick="setPendingMatch('${schedItem.p1}','${schedItem.p2}','${phaseKey}','${label}')"`
+      : '';
+    const cls = played ? '' : (allowClick ? 'clickable current' : 'pending');
+    return `<div class="bracket-match ${cls}" ${clickAttr}>
+      <div class="bracket-mlabel">${label}</div>
+      <div class="bracket-line">
+        <span class="bname ${win1 ? 'winner' : (win2 ? 'loser' : '')}">${p1?.name || '?'}</span>
+        <span class="bscore ${played ? '' : 'dash'}">${played ? m.g1 : '—'}</span>
+      </div>
+      <div class="bracket-line">
+        <span class="bname ${win2 ? 'winner' : (win1 ? 'loser' : '')}">${p2?.name || '?'}</span>
+        <span class="bscore ${played ? '' : 'dash'}">${played ? m.g2 : '—'}</span>
+      </div>
+    </div>`;
+  }
+
+  // SF jsou klikatelné, F/3rd jen pokud vygenerovány
+  el.innerHTML = `
+    <div class="section-title">🏆 Play-off</div>
+    <div class="cl-bracket">
+      <div class="bracket-stage">
+        <div class="bracket-title">Semifinále</div>
+        ${renderBM(semiItems[0], sf1m, 'SF1', true)}
+        ${renderBM(semiItems[1], sf2m, 'SF2', true)}
+      </div>
+      <div class="bracket-stage">
+        <div class="bracket-title">Finále / 3. místo</div>
+        ${renderBM(finalItem, finalM, 'Finále', true)}
+        ${renderBM(thirdItem, thirdM, 'O 3. místo', true)}
+      </div>
+    </div>
+  `;
+}
+
+// ── ADVANCE TOURNAMENT — generování dalších fází ─────────────────────────────
+async function checkTournamentProgress() {
+  if (!currentTournament) return;
+  if (currentTournament.type === 'cl_basic') {
+    await advanceClBasic();
+  }
+  // Fáze 3, 4: další typy
+}
+
+async function advanceClBasic() {
+  const t = currentTournament;
+  if (!t || t.type !== 'cl_basic') return;
+  const schedule = [...(t.schedule || [])];
+
+  const groupTotal = schedule.filter(s => s.phase === 'group').length;
+  const groupPlayed = matches.filter(m => (m.phase || 'group') === 'group').length;
+
+  // 1) Po dohrání group → vygeneruj SF (pokud ještě nejsou)
+  const hasSF = schedule.some(s => s.phase === 'semi');
+  if (groupPlayed >= groupTotal && !hasSF) {
+    const groupMatches = matches.filter(m => (m.phase || 'group') === 'group');
+    const standings = calcStandingsFrom(groupMatches, t.players);
+    if (standings.length >= 4) {
+      schedule.push(
+        { p1: standings[0].id, p2: standings[3].id, phase: 'semi' },
+        { p1: standings[1].id, p2: standings[2].id, phase: 'semi' },
+      );
+      await tournamentDoc.set({ ...t, schedule, state: { stage: 'semi' } });
+      await scheduleDoc.set({ pairs: schedule });
+      showToast('🏆 Group hotov! Semifinále vygenerováno');
+      return;
+    }
+  }
+
+  // 2) Po dohrání obou SF → vygeneruj F + 3rd
+  const semiItems = schedule.filter(s => s.phase === 'semi');
+  const semiMatches = matches.filter(m => m.phase === 'semi');
+  const hasFinal = schedule.some(s => s.phase === 'final');
+  if (semiItems.length === 2 && semiMatches.length >= 2 && !hasFinal) {
+    // Najdi výsledky pro každý SF
+    const sf1m = matchForSchedule(semiItems[0], 'semi');
+    const sf2m = matchForSchedule(semiItems[1], 'semi');
+    if (!sf1m || !sf2m) return;
+    if (sf1m.g1 === sf1m.g2 || sf2m.g1 === sf2m.g2) {
+      showToast('⚠️ V semifinále nemůže být remíza — uprav skóre');
+      return;
+    }
+    const w1 = sf1m.g1 > sf1m.g2 ? sf1m.p1 : sf1m.p2;
+    const l1 = sf1m.g1 > sf1m.g2 ? sf1m.p2 : sf1m.p1;
+    const w2 = sf2m.g1 > sf2m.g2 ? sf2m.p1 : sf2m.p2;
+    const l2 = sf2m.g1 > sf2m.g2 ? sf2m.p2 : sf2m.p1;
+    schedule.push(
+      { p1: w1, p2: w2, phase: 'final' },
+      { p1: l1, p2: l2, phase: 'third' },
+    );
+    await tournamentDoc.set({ ...t, schedule, state: { stage: 'final' } });
+    await scheduleDoc.set({ pairs: schedule });
+    showToast('⚽ Finále a zápas o 3. místo vygenerován!');
+  }
 }
 
 function fillSelect(id, sel='', exclude='', disabled=false) {
@@ -1544,16 +1972,29 @@ function setScore(gid, val, setter) {
   buildScore(gid, val, setter);
 }
 
-function saveMatch() {
+async function saveMatch() {
   const p1=document.getElementById('fP1').value;
   const p2=document.getElementById('fP2').value;
   if (!p1||!p2) { alert('Vyber oba hráče!'); return; }
-  matchesCol.add({p1, p2, g1:sF1, g2:sF2, ts:Date.now()});
+
+  // Pro cl_basic vyžaduj phase z pendingMatch nebo fail
+  let phase = null;
+  if (pendingMatch && pendingMatch.p1 === p1 && pendingMatch.p2 === p2) {
+    phase = pendingMatch.phase;
+  } else if (currentTournament?.type === 'cl_basic') {
+    alert('Pro Ligu mistrů Basic klikni nejdříve na konkrétní zápas v rozlosování (nebo bracket).');
+    return;
+  }
+
+  await matchesCol.add({p1, p2, g1:sF1, g2:sF2, ts:Date.now(), phase: phase || null});
   sF1=0; sF2=0;
   buildScore('sg1',0,'f1'); buildScore('sg2',0,'f2');
   document.getElementById('fP1').value='';
   fillSelect('fP2','','',true);
+  clearPendingMatch();
   showToast('✅ Zápas uložen!');
+  // Po uložení zkontroluj progres
+  await checkTournamentProgress();
 }
 
 function deleteMatch(id) {
@@ -1588,12 +2029,14 @@ function closeModal() {
   document.getElementById('editModal').classList.remove('open');
   editId=null;
 }
-function confirmEdit() {
+async function confirmEdit() {
   const p1=document.getElementById('eP1').value;
   const p2=document.getElementById('eP2').value;
   if (!p1||!p2||p1===p2) { alert('Zkontroluj výběr hráčů!'); return; }
-  matchesCol.doc(editId).update({p1, p2, g1:sE1, g2:sE2});
+  await matchesCol.doc(editId).update({p1, p2, g1:sE1, g2:sE2});
   closeModal();
+  // Po editaci výsledku v SF se mohlo změnit kdo postoupil — přepočítej progres
+  await checkTournamentProgress();
 }
 
 function calcStandingsFrom(matchList, playerIds) {
@@ -1813,6 +2256,8 @@ function init() {
     matches = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
     renderAll();
     renderSchedule();
+    // Případný auto-advance turnaje (LM Basic atd.)
+    checkTournamentProgress();
   });
   partiesCol.orderBy('closedAt').onSnapshot(snapshot => {
     parties = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
