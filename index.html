@@ -708,6 +708,135 @@
     line-height: 1.5;
     margin-bottom: 16px;
   }
+
+  /* TOURNAMENT SELECTOR */
+  .tournament-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0 6px;
+  }
+  .tournament-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    transition: all 0.2s;
+    min-height: 64px;
+    width: 100%;
+    font: inherit;
+    position: relative;
+    touch-action: manipulation;
+  }
+  .tournament-option:active {
+    background: rgba(245,200,66,0.12);
+    border-color: var(--gold);
+  }
+  .tournament-option.soon { opacity: 0.55; }
+  .tournament-option.soon::after {
+    content: 'BRZY';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    color: var(--gold-dark);
+    background: rgba(245,200,66,0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .to-icon {
+    font-size: 1.8rem;
+    width: 44px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .to-info { flex: 1; min-width: 0; }
+  .to-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 1.5px;
+    color: var(--gold);
+    line-height: 1.1;
+  }
+  .to-desc {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .player-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 14px;
+  }
+  .player-check {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    min-height: 44px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .player-check.checked {
+    border-color: var(--green-light);
+    background: rgba(35,160,80,0.1);
+  }
+  .player-check input {
+    width: 20px; height: 20px;
+    accent-color: var(--green-light);
+    pointer-events: none;
+  }
+  .player-check .pname { flex: 1; color: var(--text); }
+  .player-check .pclub { color: var(--text-dim); font-size: 0.85rem; }
+
+  /* TOURNAMENT INFO BAR */
+  .tournament-info {
+    background: linear-gradient(90deg, rgba(245,200,66,0.12), rgba(245,200,66,0.02));
+    border: 1px solid rgba(245,200,66,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tournament-info .ti-icon { font-size: 1.1rem; }
+  .tournament-info strong {
+    color: var(--gold);
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .new-tournament-btn {
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none;
+    color: #111;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2.5px;
+    padding: 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    min-height: 50px;
+    touch-action: manipulation;
+  }
 </style>
 </head>
 <body>
@@ -726,6 +855,11 @@
 
 <div id="view-current">
 <div class="container">
+
+  <div class="tournament-info" id="tournamentInfoBar">
+    <span class="ti-icon">🏆</span>
+    <span id="tournamentInfoText">Načítám turnaj…</span>
+  </div>
 
   <div class="section-title">📋 Rozlosování</div>
   <div class="schedule-list" id="scheduleList"></div>
@@ -781,6 +915,14 @@
     <button class="close-btn" onclick="openClosePartyModal()">🏁 Uzavřít a archivovat</button>
   </div>
 
+  <div class="section-title">🆕 Nový turnaj</div>
+  <div class="form-card">
+    <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);font-size:0.88rem;margin-bottom:12px;line-height:1.4">
+      Zahaj nový turnaj s vlastním formátem (3/4 hráči, Liga mistrů, 2v2…).
+    </p>
+    <button class="new-tournament-btn" onclick="openNewTournamentModal()">🏆 Vybrat formát turnaje</button>
+  </div>
+
   <div class="danger-zone">
     <div class="danger-label">⚠️ Nebezpečná zóna — nevratná akce</div>
     <button class="reset-btn" onclick="resetAll()">🗑️ Vymazat všechny zápasy</button>
@@ -832,6 +974,77 @@
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeClosePartyModal()">Zrušit</button>
       <button class="btn-ok" style="background:var(--gold);color:#111" onclick="confirmCloseParty()">Uzavřít</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW TOURNAMENT MODAL -->
+<div class="overlay" id="tournamentModal">
+  <div class="modal" style="max-width:440px">
+    <h3>🏆 Nový turnaj</h3>
+    <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin-bottom:6px">Vyber formát:</p>
+    <div class="tournament-options" id="tournamentOptions">
+      <button class="tournament-option" onclick="selectTournamentType('cycle4')">
+        <div class="to-icon">🔄</div>
+        <div class="to-info">
+          <div class="to-name">4 hráči — 1 cyklus</div>
+          <div class="to-desc">Každý s každým, 6 zápasů</div>
+        </div>
+      </button>
+      <button class="tournament-option" onclick="selectTournamentType('cycle3')">
+        <div class="to-icon">🔁</div>
+        <div class="to-info">
+          <div class="to-name">3 hráči — 1 cyklus</div>
+          <div class="to-desc">3 zápasy, vyber kdo hraje</div>
+        </div>
+      </button>
+      <button class="tournament-option soon" onclick="selectTournamentType('cl_basic')">
+        <div class="to-icon">⚽</div>
+        <div class="to-info">
+          <div class="to-name">Liga mistrů Basic</div>
+          <div class="to-desc">Skupina (12) + play off</div>
+        </div>
+      </button>
+      <button class="tournament-option soon" onclick="selectTournamentType('cl_full')">
+        <div class="to-icon">🏆</div>
+        <div class="to-info">
+          <div class="to-name">Liga mistrů Full</div>
+          <div class="to-desc">Pavouk 16 týmů, 4 kola</div>
+        </div>
+      </button>
+      <button class="tournament-option soon" onclick="selectTournamentType('team2v2')">
+        <div class="to-icon">👥</div>
+        <div class="to-info">
+          <div class="to-name">2v2 týmový režim</div>
+          <div class="to-desc">8 zápasů dvojic</div>
+        </div>
+      </button>
+    </div>
+    <div id="cycle3Setup" style="display:none">
+      <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin:10px 0 6px">Vyber 3 hráče, kteří budou hrát:</p>
+      <div class="player-checks" id="playerChecks"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeTournamentModal()">Zrušit</button>
+      <button class="btn-ok" id="tournamentConfirmBtn" style="background:var(--gold);color:#111;display:none" onclick="confirmTournamentSelection()">Pokračovat</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOURNAMENT CONFIRM (ROZEHRANÝ VEČÍREK) MODAL -->
+<div class="overlay" id="tournamentConfirmModal">
+  <div class="modal">
+    <h3>⚠️ Rozehraný večírek</h3>
+    <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin-bottom:10px;line-height:1.5">
+      Máš v aktuálním večírku <strong id="tcMatchCount" style="color:var(--white)">0</strong> odehraných zápasů. Co s nimi?
+    </p>
+    <div class="fgroup" style="margin-top:6px">
+      <label>Datum večírku (pro archivaci)</label>
+      <input type="date" id="tcArchiveDate" class="date-input">
+    </div>
+    <div class="modal-btns" style="flex-direction:column;gap:8px;margin-top:14px">
+      <button class="btn-ok" style="background:var(--gold);color:#111;width:100%" onclick="confirmTournamentArchive()">📚 Archivovat a začít nový</button>
+      <button class="btn-cancel" style="width:100%" onclick="closeTournamentConfirmModal()">Zrušit</button>
     </div>
   </div>
 </div>
@@ -894,14 +1107,23 @@ const PLAYERS = [
   { id:'jirik', name:'Jiřík', club:'Liverpool',   clr:'#c8102e', logo:'liverpool.png' },
 ];
 
-function generateSchedule() {
-  // Všechny páry (každý s každým)
-  const pairs = [];
-  for (let i = 0; i < PLAYERS.length; i++)
-    for (let j = i+1; j < PLAYERS.length; j++)
-      pairs.push([PLAYERS[i].id, PLAYERS[j].id]);
+// ── TOURNAMENT TYPES ─────────────────────────────────────────────────────────
+const TOURNAMENT_TYPES = {
+  cycle4:   { name: '4 hráči — 1 cyklus',     icon: '🔄' },
+  cycle3:   { name: '3 hráči — 1 cyklus',     icon: '🔁' },
+  cl_basic: { name: 'Liga mistrů Basic',      icon: '⚽' },
+  cl_full:  { name: 'Liga mistrů Full',       icon: '🏆' },
+  team2v2:  { name: '2v2 týmový režim',       icon: '👥' },
+};
+const SUPPORTED_TYPES = ['cycle3', 'cycle4']; // Fáze 1: jen tyto fungují
 
-  // Náhodné pořadí s podmínkou: žádný hráč 3x za sebou (včetně přechodu kola)
+// Cyklický rozpis — každý s každým, anti-consecutive (max 2 v řadě s wrap-around)
+function generateCycleSchedule(playerIds) {
+  const pairs = [];
+  for (let i = 0; i < playerIds.length; i++)
+    for (let j = i+1; j < playerIds.length; j++)
+      pairs.push([playerIds[i], playerIds[j]]);
+
   const N = pairs.length;
   for (let attempt = 0; attempt < 1000; attempt++) {
     for (let i = N-1; i > 0; i--) {
@@ -919,11 +1141,26 @@ function generateSchedule() {
     }
     if (valid) break;
   }
-  // Vrátit jako objekty — Firestore nepodporuje vnořená pole
   return pairs.map(([a, b]) => Math.random() > 0.5 ? {p1:b, p2:a} : {p1:a, p2:b});
 }
 
+// Wrapper pro zpětnou kompatibilitu (default 4 hráči)
+function generateSchedule() {
+  return generateCycleSchedule(PLAYERS.map(p => p.id));
+}
+
+// Generátor turnaje podle typu
+function buildTournament(type, playerIds) {
+  const base = { type, players: playerIds, startedAt: Date.now() };
+  if (type === 'cycle3' || type === 'cycle4') {
+    return { ...base, schedule: generateCycleSchedule(playerIds) };
+  }
+  // TODO: Fáze 2-4 (cl_basic, cl_full, team2v2)
+  return { ...base, schedule: generateCycleSchedule(playerIds) };
+}
+
 let SCHEDULE = [];
+let currentTournament = null; // { type, players, schedule, startedAt, ... }
 
 const firebaseConfig = {
   apiKey: "AIzaSyClMgDeEt6mSdnm3RON7lccNbfOKMmIefI",
@@ -939,6 +1176,7 @@ const matchesCol = db.collection('matches');
 const partiesCol = db.collection('parties');
 const scheduleDoc = db.collection('config').doc('schedule');
 const storeDoc   = db.collection('config').doc('store');
+const tournamentDoc = db.collection('config').doc('tournament');
 
 // ── STORE CONFIG ─────────────────────────────────────────────────────────────
 // Vercel API URL — po deployi na Vercel zkontroluj URL a uprav pokud se liší
@@ -983,6 +1221,157 @@ function renderStore() {
       </div>
     </div>`;
   }).join('');
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── TOURNAMENT SELECTOR ──────────────────────────────────────────────────────
+let pendingTournamentType = null; // typ čekající na potvrzení (po výběru hráčů u cycle3)
+let cycle3Selected = []; // ids vybraných hráčů pro cycle3
+
+function openNewTournamentModal() {
+  pendingTournamentType = null;
+  cycle3Selected = [];
+  document.getElementById('cycle3Setup').style.display = 'none';
+  document.getElementById('tournamentOptions').style.display = '';
+  document.getElementById('tournamentConfirmBtn').style.display = 'none';
+  // odznač všechny option highlighty
+  document.querySelectorAll('.tournament-option').forEach(b => b.style.borderColor = '');
+  document.getElementById('tournamentModal').classList.add('open');
+}
+function closeTournamentModal() {
+  document.getElementById('tournamentModal').classList.remove('open');
+}
+function selectTournamentType(type) {
+  if (!SUPPORTED_TYPES.includes(type)) {
+    showToast('🚧 Tento formát zatím není dostupný');
+    return;
+  }
+  pendingTournamentType = type;
+  // zvýrazni vybranou možnost
+  document.querySelectorAll('.tournament-option').forEach(b => {
+    b.style.borderColor = b.getAttribute('onclick').includes(`'${type}'`) ? 'var(--gold)' : '';
+  });
+  if (type === 'cycle3') {
+    cycle3Selected = [];
+    renderPlayerChecks();
+    document.getElementById('cycle3Setup').style.display = '';
+    document.getElementById('tournamentConfirmBtn').style.display = '';
+  } else {
+    document.getElementById('cycle3Setup').style.display = 'none';
+    document.getElementById('tournamentConfirmBtn').style.display = '';
+  }
+}
+function renderPlayerChecks() {
+  document.getElementById('playerChecks').innerHTML = PLAYERS.map(p => {
+    const checked = cycle3Selected.includes(p.id);
+    return `<label class="player-check${checked ? ' checked' : ''}" onclick="togglePlayerCheck('${p.id}')">
+      <input type="checkbox" ${checked ? 'checked' : ''} readonly>
+      <span class="pname">${p.name}</span>
+      <span class="pclub">${p.club}</span>
+    </label>`;
+  }).join('');
+}
+function togglePlayerCheck(pid) {
+  const idx = cycle3Selected.indexOf(pid);
+  if (idx >= 0) {
+    cycle3Selected.splice(idx, 1);
+  } else {
+    if (cycle3Selected.length >= 3) {
+      showToast('⚠️ Vyber jen 3 hráče');
+      return;
+    }
+    cycle3Selected.push(pid);
+  }
+  renderPlayerChecks();
+}
+function confirmTournamentSelection() {
+  if (!pendingTournamentType) return;
+  let players;
+  if (pendingTournamentType === 'cycle3') {
+    if (cycle3Selected.length !== 3) {
+      alert('Vyber přesně 3 hráče!');
+      return;
+    }
+    players = [...cycle3Selected];
+  } else {
+    players = PLAYERS.map(p => p.id);
+  }
+  // Pokud jsou rozehrané zápasy → nabídni archivaci
+  if (matches.length > 0) {
+    document.getElementById('tcMatchCount').textContent = matches.length;
+    document.getElementById('tcArchiveDate').value = new Date().toISOString().slice(0,10);
+    // Předem si uložím pending volbu
+    pendingTournamentPlayers = players;
+    closeTournamentModal();
+    document.getElementById('tournamentConfirmModal').classList.add('open');
+  } else {
+    // Žádné zápasy — rovnou vytvoř turnaj
+    closeTournamentModal();
+    doStartTournament(pendingTournamentType, players);
+  }
+}
+let pendingTournamentPlayers = null;
+function closeTournamentConfirmModal() {
+  document.getElementById('tournamentConfirmModal').classList.remove('open');
+}
+async function confirmTournamentArchive() {
+  const date = document.getElementById('tcArchiveDate').value;
+  if (!date) { alert('Vyber datum pro archivaci!'); return; }
+  closeTournamentConfirmModal();
+  // Archivuj současné zápasy
+  await partiesCol.add({
+    date,
+    closedAt: Date.now(),
+    tournamentType: currentTournament?.type || 'cycle4',
+    matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
+  });
+  // Smaž aktuální zápasy
+  const deletions = matches.map(m => matchesCol.doc(m.id).delete());
+  await Promise.all(deletions);
+  // Vytvoř nový turnaj
+  await doStartTournament(pendingTournamentType, pendingTournamentPlayers);
+  pendingTournamentPlayers = null;
+  showToast('🏁 Archivováno, nový turnaj zahájen!');
+}
+async function doStartTournament(type, playerIds) {
+  const t = buildTournament(type, playerIds);
+  await tournamentDoc.set(t);
+  // schedule synchronizuj i do scheduleDoc (kvůli zpětné kompatibilitě s renderSchedule)
+  await scheduleDoc.set({ pairs: t.schedule });
+  showToast(`🏆 ${TOURNAMENT_TYPES[type].icon} ${TOURNAMENT_TYPES[type].name}`);
+}
+
+async function migrateTournamentIfNeeded() {
+  try {
+    const tSnap = await tournamentDoc.get();
+    if (tSnap.exists) return;
+    // tournamentDoc neexistuje — vytvoř default cycle4 ze stávajícího schedule (pokud je)
+    const sSnap = await scheduleDoc.get();
+    const schedule = sSnap.exists && sSnap.data().pairs?.length
+      ? sSnap.data().pairs
+      : generateSchedule();
+    await tournamentDoc.set({
+      type: 'cycle4',
+      players: PLAYERS.map(p => p.id),
+      schedule,
+      startedAt: Date.now(),
+    });
+  } catch (e) {
+    console.error('Migrace turnaje selhala:', e);
+  }
+}
+
+function renderTournamentInfo() {
+  const bar = document.getElementById('tournamentInfoBar');
+  const txt = document.getElementById('tournamentInfoText');
+  if (!currentTournament) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = '';
+  const t = TOURNAMENT_TYPES[currentTournament.type];
+  const playerNames = currentTournament.players.map(id => getP(id)?.name || id).join(', ');
+  txt.innerHTML = `${t.icon} <strong>${t.name}</strong> · ${playerNames}`;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1034,9 +1423,15 @@ function renderSchedule() {
 
 function fillSelect(id, sel='', exclude='', disabled=false) {
   const el = document.getElementById(id);
+  // Pro aktivní formulář (fP1, fP2) zobraz jen hráče současného turnaje;
+  // pro edit (eP1, eP2) všechny — aby šly upravit i historické zápasy
+  const isEdit = id.startsWith('e');
+  const pool = isEdit
+    ? PLAYERS
+    : PLAYERS.filter(p => currentTournament ? currentTournament.players.includes(p.id) : true);
   el.innerHTML =
     '<option value="">— Vyber hráče —</option>' +
-    PLAYERS.filter(p => p.id !== exclude)
+    pool.filter(p => p.id !== exclude)
       .map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${p.name} (${p.club})</option>`).join('');
   el.disabled = disabled;
 }
@@ -1086,8 +1481,12 @@ function resetAll() {
   matches.forEach(m => matchesCol.doc(m.id).delete());
 }
 
-function rerollSchedule() {
-  scheduleDoc.set({ pairs: generateSchedule() });
+async function rerollSchedule() {
+  const t = currentTournament?.type || 'cycle4';
+  const players = currentTournament?.players || PLAYERS.map(p => p.id);
+  const newT = buildTournament(t, players);
+  await tournamentDoc.set(newT);
+  await scheduleDoc.set({ pairs: newT.schedule });
   showToast('🎲 Nové rozlosování!');
 }
 
@@ -1111,9 +1510,11 @@ function confirmEdit() {
   closeModal();
 }
 
-function calcStandingsFrom(matchList) {
+function calcStandingsFrom(matchList, playerIds) {
+  // Pokud nejsou předáni hráči, použij ty z turnaje nebo všechny
+  const ids = playerIds || currentTournament?.players || PLAYERS.map(p=>p.id);
   const s={};
-  PLAYERS.forEach(p=>s[p.id]={id:p.id,z:0,v:0,r:0,pr:0,gp:0,gm:0,b:0});
+  ids.forEach(id=>s[id]={id,z:0,v:0,r:0,pr:0,gp:0,gm:0,b:0});
   matchList.forEach(m=>{
     const a=s[m.p1],b=s[m.p2];
     if(!a||!b) return;
@@ -1127,9 +1528,9 @@ function calcStandingsFrom(matchList) {
   return Object.values(s).sort((a,b)=>b.b-a.b||(b.gp-b.gm)-(a.gp-a.gm)||b.gp-a.gp);
 }
 
-function renderStandingsTable(tbodyId, matchList) {
+function renderStandingsTable(tbodyId, matchList, playerIds) {
   const rc=['r1','r2','r3','r4'];
-  document.getElementById(tbodyId).innerHTML = calcStandingsFrom(matchList).map((s,i)=>{
+  document.getElementById(tbodyId).innerHTML = calcStandingsFrom(matchList, playerIds).map((s,i)=>{
     const p=getP(s.id), d=s.gp-s.gm;
     return `<tr>
       <td><span class="rank-badge ${rc[i]}">${i+1}</span></td>
@@ -1148,7 +1549,10 @@ function renderStandingsTable(tbodyId, matchList) {
   }).join('');
 }
 
-function renderStandings() { renderStandingsTable('standingsBody', matches); }
+function renderStandings() {
+  // Aktivní tabulka — jen hráči současného turnaje
+  renderStandingsTable('standingsBody', matches, currentTournament?.players);
+}
 
 function showTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
@@ -1180,11 +1584,17 @@ async function confirmCloseParty() {
   await partiesCol.add({
     date,
     closedAt: Date.now(),
-    matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0}))
+    tournamentType: currentTournament?.type || 'cycle4',
+    matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
   });
   matches.forEach(m => matchesCol.doc(m.id).delete());
   document.getElementById('partyDate').value = '';
-  scheduleDoc.set({ pairs: generateSchedule() });
+  // Po archivaci spusť nový turnaj stejného typu (nebo default cycle4)
+  const t = currentTournament?.type || 'cycle4';
+  const players = currentTournament?.players || PLAYERS.map(p => p.id);
+  const newT = buildTournament(t, players);
+  await tournamentDoc.set(newT);
+  await scheduleDoc.set({ pairs: newT.schedule });
   showToast('🏁 Večírek archivován!');
   showTab('history');
 }
@@ -1282,10 +1692,28 @@ function init() {
       scheduleDoc.set({ pairs: generateSchedule() });
     }
   });
+  // Migrace na nový datový model (proběhne jen pokud config/tournament neexistuje)
+  migrateTournamentIfNeeded();
+  tournamentDoc.onSnapshot(snap => {
+    if (snap.exists) {
+      currentTournament = snap.data();
+      renderTournamentInfo();
+      // Reload hráčských selectů (pokud se změnil počet hráčů)
+      fillSelect('fP1');
+      fillSelect('fP2','','',true);
+      renderStandings();
+    }
+  });
   applyBackground(activeBg);
   renderStore();
   document.getElementById('closePartyModal').addEventListener('click', e => {
     if (e.target===document.getElementById('closePartyModal')) closeClosePartyModal();
+  });
+  document.getElementById('tournamentModal').addEventListener('click', e => {
+    if (e.target===document.getElementById('tournamentModal')) closeTournamentModal();
+  });
+  document.getElementById('tournamentConfirmModal').addEventListener('click', e => {
+    if (e.target===document.getElementById('tournamentConfirmModal')) closeTournamentConfirmModal();
   });
 }
 
