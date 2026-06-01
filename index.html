@@ -1857,7 +1857,7 @@ async function confirmTournamentArchive() {
     closedAt: Date.now(),
     tournamentType: currentTournament?.type || 'cycle4',
     players: currentTournament?.players || PLAYERS.map(p=>p.id),
-    matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
+    matches: matches.map(serializeMatchForArchive),
   });
   // Smaž aktuální zápasy
   const deletions = matches.map(m => matchesCol.doc(m.id).delete());
@@ -2670,26 +2670,53 @@ function openClosePartyModal() {
 }
 function closeClosePartyModal() { document.getElementById('closePartyModal').classList.remove('open'); }
 
+// Serializuj match pro archivaci do Firestore (eliminuj undefined hodnoty)
+function serializeMatchForArchive(m) {
+  if (m.phase === 'team2v2') {
+    return {
+      phase: 'team2v2',
+      teamA: m.teamA || null,
+      teamB: m.teamB || null,
+      g1: m.g1 || 0,
+      g2: m.g2 || 0,
+      ts: m.ts || 0,
+    };
+  }
+  return {
+    p1: m.p1 || null,
+    p2: m.p2 || null,
+    g1: m.g1 || 0,
+    g2: m.g2 || 0,
+    ts: m.ts || 0,
+    phase: m.phase || null,
+  };
+}
+
 async function confirmCloseParty() {
   const date = document.getElementById('partyDate').value;
   closeClosePartyModal();
-  await partiesCol.add({
-    date,
-    closedAt: Date.now(),
-    tournamentType: currentTournament?.type || 'cycle4',
-    players: currentTournament?.players || PLAYERS.map(p=>p.id),
-    matches: matches.map(m => ({p1:m.p1, p2:m.p2, g1:m.g1, g2:m.g2, ts:m.ts||0, phase:m.phase||null}))
-  });
-  matches.forEach(m => matchesCol.doc(m.id).delete());
-  document.getElementById('partyDate').value = '';
-  // Po archivaci spusť nový turnaj stejného typu (nebo default cycle4)
-  const t = currentTournament?.type || 'cycle4';
-  const players = currentTournament?.players || PLAYERS.map(p => p.id);
-  const newT = buildTournament(t, players);
-  await tournamentDoc.set(newT);
-  await scheduleDoc.set({ pairs: newT.schedule });
-  showToast('🏁 Večírek archivován!');
-  showTab('history');
+  try {
+    await partiesCol.add({
+      date,
+      closedAt: Date.now(),
+      tournamentType: currentTournament?.type || 'cycle4',
+      players: currentTournament?.players || PLAYERS.map(p=>p.id),
+      matches: matches.map(serializeMatchForArchive),
+    });
+    await Promise.all(matches.map(m => matchesCol.doc(m.id).delete()));
+    document.getElementById('partyDate').value = '';
+    // Po archivaci spusť nový turnaj stejného typu (nebo default cycle4)
+    const t = currentTournament?.type || 'cycle4';
+    const players = currentTournament?.players || PLAYERS.map(p => p.id);
+    const newT = buildTournament(t, players);
+    await tournamentDoc.set(newT);
+    await scheduleDoc.set({ pairs: newT.schedule });
+    showToast('🏁 Večírek archivován!');
+    showTab('history');
+  } catch (e) {
+    console.error('Archivace selhala:', e);
+    alert('Archivace selhala: ' + e.message);
+  }
 }
 
 let historyFilter = 'cycle4';
@@ -2850,15 +2877,34 @@ function openPartyDetail(partyId) {
   const p = parties.find(x=>x.id===partyId);
   if (!p) return;
   document.getElementById('partyDetailTitle').textContent = formatDate(p.date);
-  renderStandingsTable('partyDetailStandingsBody', p.matches||[]);
+  renderStandingsTable('partyDetailStandingsBody', p.matches||[], partyPlayers(p));
   const el = document.getElementById('partyDetailMatchesList');
   const ms = p.matches||[];
   if (!ms.length) { el.innerHTML='<div class="empty-state">Žádné zápasy.</div>'; }
   else {
     el.innerHTML = [...ms].reverse().map(m=>{
+      if (m.phase === 'team2v2') {
+        const pA1 = getP(m.teamA?.players?.[0]);
+        const pA2 = getP(m.teamA?.players?.[1]);
+        const pB1 = getP(m.teamB?.players?.[0]);
+        const pB2 = getP(m.teamB?.players?.[1]);
+        const clubA = getP(m.teamA?.clubId);
+        const clubB = getP(m.teamB?.clubId);
+        if (!pA1 || !pB1) return '';
+        return `<div class="match-item team-match">
+          <div class="match-phase-tag">2v2</div>
+          <div class="match-p home">${badge(clubA,22)}<span class="pname">${pA1.name}+${pA2?.name}</span></div>
+          <div class="match-score-box">${m.g1} : ${m.g2}</div>
+          <div class="match-p away">${badge(clubB,22)}<span class="pname">${pB1.name}+${pB2?.name}</span></div>
+          <div style="width:0"></div>
+        </div>`;
+      }
       const p1=getP(m.p1), p2=getP(m.p2);
       if(!p1||!p2) return '';
+      const phaseTxt = phaseLabel(m.phase);
+      const phaseHtml = phaseTxt ? `<div class="match-phase-tag">${phaseTxt}</div>` : '';
       return `<div class="match-item">
+        ${phaseHtml}
         <div class="match-p home">${badge(p1,24)}<span class="pname">${p1.name}</span></div>
         <div class="match-score-box">${m.g1} : ${m.g2}</div>
         <div class="match-p away">${badge(p2,24)}<span class="pname">${p2.name}</span></div>
