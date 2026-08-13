@@ -707,6 +707,15 @@
     background-size: auto, auto, auto, auto, auto, 100% auto;
     background-position: 0 0, 0 0, 0 0, 0 0, 0 0, center center;
   }
+  #bg-layer.bg-weerpo {
+    /* Bez PNG obrázku — placeholder gradient MC (Manchester City modrá). Po nahrání background_manchester_city.png přidej url('...') na konec background-image. */
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(108,171,221,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(255,255,255,0.08) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.025) 49px, rgba(255,255,255,0.025) 50px),
+      linear-gradient(180deg, rgba(0,20,45,0.35), rgba(0,0,0,0.65));
+  }
 
   /* STORE */
   .store-grid { display: flex; flex-direction: column; gap: 12px; }
@@ -1707,44 +1716,51 @@
     <h3>🏆 Nový turnaj</h3>
     <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin-bottom:6px">Vyber formát:</p>
     <div class="tournament-options" id="tournamentOptions">
+      <button class="tournament-option" onclick="selectTournamentType('cycle5')">
+        <div class="to-icon">🖐️</div>
+        <div class="to-info">
+          <div class="to-name">5 hráčů — 1 cyklus</div>
+          <div class="to-desc">Každý s každým, 10 zápasů</div>
+        </div>
+      </button>
       <button class="tournament-option" onclick="selectTournamentType('cycle4')">
         <div class="to-icon">🔄</div>
         <div class="to-info">
           <div class="to-name">4 hráči — 1 cyklus</div>
-          <div class="to-desc">Každý s každým, 6 zápasů</div>
+          <div class="to-desc">Vyber 4 hráče, 6 zápasů</div>
         </div>
       </button>
       <button class="tournament-option" onclick="selectTournamentType('cycle3')">
         <div class="to-icon">🔁</div>
         <div class="to-info">
           <div class="to-name">3 hráči — 1 cyklus</div>
-          <div class="to-desc">3 zápasy, vyber kdo hraje</div>
+          <div class="to-desc">Vyber 3 hráče, 3 zápasy</div>
         </div>
       </button>
       <button class="tournament-option" onclick="selectTournamentType('cl_basic')">
         <div class="to-icon">⚽</div>
         <div class="to-info">
           <div class="to-name">Liga mistrů Basic</div>
-          <div class="to-desc">Skupina (12) + play off</div>
+          <div class="to-desc">Vyber 4 hráče · skupina (12) + play off</div>
         </div>
       </button>
       <button class="tournament-option" onclick="selectTournamentType('cl_full')">
         <div class="to-icon">🏆</div>
         <div class="to-info">
           <div class="to-name">Liga mistrů Full</div>
-          <div class="to-desc">Pavouk 16 týmů, 4 kola</div>
+          <div class="to-desc">Vyber 4 hráče · pavouk 16 týmů, 4 kola</div>
         </div>
       </button>
       <button class="tournament-option" onclick="selectTournamentType('team2v2')">
         <div class="to-icon">👥</div>
         <div class="to-info">
           <div class="to-name">2v2 týmový režim</div>
-          <div class="to-desc">8 zápasů dvojic</div>
+          <div class="to-desc">Vyber 4 hráče · 8 zápasů dvojic</div>
         </div>
       </button>
     </div>
     <div id="cycle3Setup" style="display:none">
-      <p style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin:10px 0 6px">Vyber 3 hráče, kteří budou hrát:</p>
+      <p id="playerPickLabel" style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);margin:10px 0 6px">Vyber 3 hráče, kteří budou hrát:</p>
       <div class="player-checks" id="playerChecks"></div>
     </div>
     <div class="modal-btns">
@@ -1779,6 +1795,7 @@
     <div class="history-filter" id="historyFilter">
       <button class="hf-btn active" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
       <button class="hf-btn" data-filter="cycle3" onclick="setHistoryFilter('cycle3')">🔁 3 hráči</button>
+      <button class="hf-btn" data-filter="cycle5" onclick="setHistoryFilter('cycle5')">🖐️ 5 hráčů</button>
       <button class="hf-btn" data-filter="cl_basic" onclick="setHistoryFilter('cl_basic')">⚽ LM Basic</button>
       <button class="hf-btn" data-filter="cl_full" onclick="setHistoryFilter('cl_full')">🏆 LM Full</button>
       <button class="hf-btn" data-filter="team2v2" onclick="setHistoryFilter('team2v2')">👥 2v2</button>
@@ -1828,28 +1845,37 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script>
 const PLAYERS = [
-  { id:'tom',   name:'Tom',   club:'Real Madrid', clr:'#f5c842', logo:'real_madrid.png' },
-  { id:'luke',  name:'Luke',  club:'PSG',          clr:'#0055a4', logo:'PSG.png' },
-  { id:'kubik', name:'Kubík', club:'Barcelona',   clr:'#a50044', logo:'barcelona.png' },
-  { id:'jirik', name:'Jiřík', club:'Liverpool',   clr:'#c8102e', logo:'liverpool.png' },
+  { id:'tom',    name:'Tom',    club:'Real Madrid',     clr:'#f5c842', logo:'real_madrid.png' },
+  { id:'luke',   name:'Luke',   club:'PSG',             clr:'#0055a4', logo:'PSG.png' },
+  { id:'kubik',  name:'Kubík',  club:'Barcelona',       clr:'#a50044', logo:'barcelona.png' },
+  { id:'jirik',  name:'Jiřík',  club:'Liverpool',       clr:'#c8102e', logo:'liverpool.png' },
+  { id:'weerpo', name:'Weerpo', club:'Manchester City', clr:'#6cabdd', logo:null, initials:'MCI' },
 ];
 
 // ── TOURNAMENT TYPES ─────────────────────────────────────────────────────────
 const TOURNAMENT_TYPES = {
+  cycle5:   { name: '5 hráčů — 1 cyklus',     icon: '🖐️' },
   cycle4:   { name: '4 hráči — 1 cyklus',     icon: '🔄' },
   cycle3:   { name: '3 hráči — 1 cyklus',     icon: '🔁' },
   cl_basic: { name: 'Liga mistrů Basic',      icon: '⚽' },
   cl_full:  { name: 'Liga mistrů Full',       icon: '🏆' },
   team2v2:  { name: '2v2 týmový režim',       icon: '👥' },
 };
-const SUPPORTED_TYPES = ['cycle3', 'cycle4', 'cl_basic', 'team2v2', 'cl_full']; // Fáze 1-4
+const SUPPORTED_TYPES = ['cycle3', 'cycle4', 'cycle5', 'cl_basic', 'team2v2', 'cl_full'];
+
+// Kolik hráčů daný typ vyžaduje
+function requiredPlayersForType(type) {
+  if (type === 'cycle3') return 3;
+  if (type === 'cycle5') return 5;
+  return 4; // cycle4, cl_basic, cl_full, team2v2
+}
 
 // Non-main týmy pro LM Full (12 ks)
 const NON_MAIN_TEAMS = [
   { id: 'arsenal',    name: 'Arsenal',          initials: 'ARS', clr: '#ef0107' },
   { id: 'bayern',     name: 'Bayern Mnichov',   initials: 'BAY', clr: '#dc052d' },
   { id: 'chelsea',    name: 'Chelsea',          initials: 'CHE', clr: '#034694' },
-  { id: 'mancity',    name: 'Manchester City',  initials: 'MCI', clr: '#6cabdd' },
+  { id: 'porto',      name: 'FC Porto',         initials: 'POR', clr: '#003468' },
   { id: 'inter',      name: 'Inter Milán',      initials: 'INT', clr: '#010e80' },
   { id: 'atletico',   name: 'Atlético Madrid',  initials: 'ATM', clr: '#cb3524' },
   { id: 'dortmund',   name: 'Borussia Dortmund',initials: 'BVB', clr: '#fde100' },
@@ -1874,7 +1900,12 @@ function teamBadgeHtml(teamId, size = 28) {
   if (!t) return '';
   if (t.isMain) {
     const player = PLAYERS.find(p => p.id === teamId);
-    return `<img class="badge" src="${player.logo}?v=3" width="${size}" height="${size}" alt="${player.club}" style="width:${size}px;height:${size}px">`;
+    if (player?.logo) {
+      return `<img class="badge" src="${player.logo}?v=3" width="${size}" height="${size}" alt="${player.club}" style="width:${size}px;height:${size}px">`;
+    }
+    // Main bez PNG (Weerpo/MC) → text-badge
+    const initials = player?.initials || (player?.club || '').substring(0, 3).toUpperCase();
+    return `<div class="team-text-badge" style="width:${size}px;height:${size}px;background:${player?.clr || '#666'};font-size:${Math.round(size*0.36)}px">${initials}</div>`;
   }
   return `<div class="team-text-badge" style="width:${size}px;height:${size}px;background:${t.clr};font-size:${Math.round(size*0.36)}px">${t.initials}</div>`;
 }
@@ -2071,7 +2102,7 @@ function buildClFullSchedule(slots) {
 // Generátor turnaje podle typu
 function buildTournament(type, playerIds) {
   const base = { type, players: playerIds, startedAt: Date.now() };
-  if (type === 'cycle3' || type === 'cycle4') {
+  if (type === 'cycle3' || type === 'cycle4' || type === 'cycle5') {
     return { ...base, schedule: generateCycleSchedule(playerIds) };
   }
   if (type === 'cl_basic') {
@@ -2117,10 +2148,11 @@ const tournamentDoc = db.collection('config').doc('tournament');
 const API_BASE = 'https://fifa-vecirky.vercel.app';
 
 const BACKGROUNDS = [
-  { id:'tom',   name:'Real Madrid', clr:'#f5c842', bg:'rgba(245,200,66,0.25)' },
-  { id:'luke',  name:'PSG',         clr:'#4d9ee8', bg:'rgba(0,85,164,0.4)'   },
-  { id:'kubik', name:'Barcelona',   clr:'#e05080', bg:'rgba(165,0,68,0.35)'  },
-  { id:'jirik', name:'Liverpool',   clr:'#e84040', bg:'rgba(200,16,46,0.4)'  },
+  { id:'tom',    name:'Real Madrid',     clr:'#f5c842', bg:'rgba(245,200,66,0.25)' },
+  { id:'luke',   name:'PSG',             clr:'#4d9ee8', bg:'rgba(0,85,164,0.4)'   },
+  { id:'kubik',  name:'Barcelona',       clr:'#e05080', bg:'rgba(165,0,68,0.35)'  },
+  { id:'jirik',  name:'Liverpool',       clr:'#e84040', bg:'rgba(200,16,46,0.4)'  },
+  { id:'weerpo', name:'Manchester City', clr:'#6cabdd', bg:'rgba(108,171,221,0.35)' },
 ];
 
 let activeBg = localStorage.getItem('fifa_bg') || 'tom';
@@ -2159,16 +2191,17 @@ function renderStore() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── TOURNAMENT SELECTOR ──────────────────────────────────────────────────────
-let pendingTournamentType = null; // typ čekající na potvrzení (po výběru hráčů u cycle3)
-let cycle3Selected = []; // ids vybraných hráčů pro cycle3
+let pendingTournamentType = null;
+let selectedPlayers = []; // ids vybraných hráčů (generický picker)
+let requiredPlayerCount = 0;
 
 function openNewTournamentModal() {
   pendingTournamentType = null;
-  cycle3Selected = [];
+  selectedPlayers = [];
+  requiredPlayerCount = 0;
   document.getElementById('cycle3Setup').style.display = 'none';
   document.getElementById('tournamentOptions').style.display = '';
   document.getElementById('tournamentConfirmBtn').style.display = 'none';
-  // odznač všechny option highlighty
   document.querySelectorAll('.tournament-option').forEach(b => b.style.borderColor = '');
   document.getElementById('tournamentModal').classList.add('open');
 }
@@ -2181,23 +2214,28 @@ function selectTournamentType(type) {
     return;
   }
   pendingTournamentType = type;
+  requiredPlayerCount = requiredPlayersForType(type);
   // zvýrazni vybranou možnost
   document.querySelectorAll('.tournament-option').forEach(b => {
     b.style.borderColor = b.getAttribute('onclick').includes(`'${type}'`) ? 'var(--gold)' : '';
   });
-  if (type === 'cycle3') {
-    cycle3Selected = [];
+  const needsPicker = requiredPlayerCount < PLAYERS.length;
+  if (needsPicker) {
+    selectedPlayers = [];
     renderPlayerChecks();
+    document.getElementById('playerPickLabel').textContent =
+      `Vyber ${requiredPlayerCount} hráče/hráčů, kteří budou hrát:`;
     document.getElementById('cycle3Setup').style.display = '';
-    document.getElementById('tournamentConfirmBtn').style.display = '';
   } else {
+    // cycle5 nebo cokoli co používá všechny hráče — bez pickeru
+    selectedPlayers = PLAYERS.map(p => p.id);
     document.getElementById('cycle3Setup').style.display = 'none';
-    document.getElementById('tournamentConfirmBtn').style.display = '';
   }
+  document.getElementById('tournamentConfirmBtn').style.display = '';
 }
 function renderPlayerChecks() {
   document.getElementById('playerChecks').innerHTML = PLAYERS.map(p => {
-    const checked = cycle3Selected.includes(p.id);
+    const checked = selectedPlayers.includes(p.id);
     return `<div class="player-check${checked ? ' checked' : ''}" onclick="togglePlayerCheck('${p.id}')">
       <div class="pc-box${checked ? ' on' : ''}">${checked ? '✓' : ''}</div>
       ${badge(p, 26)}
@@ -2207,30 +2245,26 @@ function renderPlayerChecks() {
   }).join('');
 }
 function togglePlayerCheck(pid) {
-  const idx = cycle3Selected.indexOf(pid);
+  const idx = selectedPlayers.indexOf(pid);
   if (idx >= 0) {
-    cycle3Selected.splice(idx, 1);
+    selectedPlayers.splice(idx, 1);
   } else {
-    if (cycle3Selected.length >= 3) {
-      showToast('⚠️ Vyber jen 3 hráče');
+    if (selectedPlayers.length >= requiredPlayerCount) {
+      showToast(`⚠️ Vyber jen ${requiredPlayerCount} hráče/ů`);
       return;
     }
-    cycle3Selected.push(pid);
+    selectedPlayers.push(pid);
   }
   renderPlayerChecks();
 }
 function confirmTournamentSelection() {
   if (!pendingTournamentType) return;
-  let players;
-  if (pendingTournamentType === 'cycle3') {
-    if (cycle3Selected.length !== 3) {
-      alert('Vyber přesně 3 hráče!');
-      return;
-    }
-    players = [...cycle3Selected];
-  } else {
-    players = PLAYERS.map(p => p.id);
+  const req = requiredPlayerCount;
+  if (selectedPlayers.length !== req) {
+    alert(`Vyber přesně ${req} hráče/ů!`);
+    return;
   }
+  const players = [...selectedPlayers];
   // Pokud jsou rozehrané zápasy → nabídni archivaci
   if (matches.length > 0) {
     document.getElementById('tcMatchCount').textContent = matches.length;
@@ -2281,14 +2315,15 @@ async function migrateTournamentIfNeeded() {
   try {
     const tSnap = await tournamentDoc.get();
     if (tSnap.exists) return;
-    // tournamentDoc neexistuje — vytvoř default cycle4 ze stávajícího schedule (pokud je)
+    // tournamentDoc neexistuje — vytvoř default cycle4 s prvními 4 hráči (Tom, Luke, Kubík, Jiřík)
     const sSnap = await scheduleDoc.get();
+    const legacyPlayers = PLAYERS.slice(0, 4).map(p => p.id);
     const schedule = sSnap.exists && sSnap.data().pairs?.length
       ? sSnap.data().pairs
-      : generateSchedule();
+      : generateCycleSchedule(legacyPlayers);
     await tournamentDoc.set({
       type: 'cycle4',
-      players: PLAYERS.map(p => p.id),
+      players: legacyPlayers,
       schedule,
       startedAt: Date.now(),
     });
@@ -2318,7 +2353,13 @@ function getP(id) { return PLAYERS.find(p=>p.id===id); }
 
 function badge(p, sz=30) {
   if (!p) return '';
-  return `<img class="badge" src="${p.logo}?v=3" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
+  if (p.logo) {
+    return `<img class="badge" src="${p.logo}?v=3" width="${sz}" height="${sz}" alt="${p.club}" style="width:${sz}px;height:${sz}px">`;
+  }
+  // Fallback: text-badge (pro hráče bez PNG loga, např. Weerpo/Manchester City)
+  const initials = p.initials || (p.club || p.name || '?').substring(0, 3).toUpperCase();
+  const clr = p.clr || '#666';
+  return `<span class="badge team-text-badge" style="width:${sz}px;height:${sz}px;background:${clr};font-size:${Math.round(sz*0.36)}px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue',sans-serif;font-weight:700">${initials}</span>`;
 }
 
 // ── PENDING MATCH (kliknutí ze schedule předvyplní formulář) ────────────────
@@ -2753,9 +2794,11 @@ function shortTeamName(teamId) {
   const team = getTeam(teamId);
   if (!team) return '?';
   if (team.isMain) {
-    // Real Madrid → REA, PSG → PSG, Barcelona → BAR, Liverpool → LIV
     const name = team.name;
-    const map = { 'Real Madrid':'Real','PSG':'PSG','Barcelona':'Barca','Liverpool':'Liverpool' };
+    const map = {
+      'Real Madrid':'Real', 'PSG':'PSG', 'Barcelona':'Barca',
+      'Liverpool':'Liverpool', 'Manchester City':'Man City'
+    };
     return map[name] || name.substring(0, 5);
   }
   return team.name; // non-main už mají krátké názvy
