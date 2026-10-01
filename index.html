@@ -1791,9 +1791,14 @@
 <!-- HISTORY VIEW -->
 <div id="view-history" style="display:none">
   <div class="container">
+    <div class="section-title">🎮 Sezóna</div>
+    <div class="history-filter" id="seasonFilter"></div>
+    <div id="seasonNote"></div>
+
     <div class="section-title">📊 Typ turnaje</div>
     <div class="history-filter" id="historyFilter">
-      <button class="hf-btn active" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
+      <button class="hf-btn active" data-filter="all" onclick="setHistoryFilter('all')">Σ Celkem</button>
+      <button class="hf-btn" data-filter="cycle4" onclick="setHistoryFilter('cycle4')">🔄 4 hráči</button>
       <button class="hf-btn" data-filter="cycle3" onclick="setHistoryFilter('cycle3')">🔁 3 hráči</button>
       <button class="hf-btn" data-filter="cycle5" onclick="setHistoryFilter('cycle5')">🖐️ 5 hráčů</button>
       <button class="hf-btn" data-filter="cl_basic" onclick="setHistoryFilter('cl_basic')">⚽ LM Basic</button>
@@ -2291,6 +2296,7 @@ async function confirmTournamentArchive() {
   await partiesCol.add({
     date,
     closedAt: Date.now(),
+    season: CURRENT_SEASON,
     tournamentType: currentTournament?.type || 'cycle4',
     players: currentTournament?.players || PLAYERS.map(p=>p.id),
     matches: matches.map(serializeMatchForArchive),
@@ -3577,11 +3583,15 @@ function calcStandingsFrom(matchList, playerIds) {
 }
 
 function renderStandingsTable(tbodyId, matchList, playerIds) {
+  document.getElementById(tbodyId).innerHTML = standingsRowsHTML(matchList, playerIds);
+}
+
+function standingsRowsHTML(matchList, playerIds) {
   const rc=['r1','r2','r3','r4'];
-  document.getElementById(tbodyId).innerHTML = calcStandingsFrom(matchList, playerIds).map((s,i)=>{
+  return calcStandingsFrom(matchList, playerIds).map((s,i)=>{
     const p=getP(s.id), d=s.gp-s.gm;
     return `<tr>
-      <td><span class="rank-badge ${rc[i]}">${i+1}</span></td>
+      <td><span class="rank-badge ${rc[i] || ''}">${i+1}</span></td>
       <td><div class="player-cell">${badge(p,26)}<div>
         <div class="player-name">${p.name} <span style="color:var(--text-dim);font-weight:400;font-size:0.75rem">(${p.club})</span></div>
       </div></div></td>
@@ -3668,6 +3678,7 @@ async function confirmCloseParty() {
     await partiesCol.add({
       date,
       closedAt: Date.now(),
+      season: CURRENT_SEASON,
       tournamentType: currentTournament?.type || 'cycle4',
       players: currentTournament?.players || PLAYERS.map(p=>p.id),
       matches: matches.map(serializeMatchForArchive),
@@ -3688,14 +3699,84 @@ async function confirmCloseParty() {
   }
 }
 
-let historyFilter = 'cycle4';
+// ── SEZÓNY ───────────────────────────────────────────────────────────────────
+// Večírky bez pole `season` patří do FC 26 (vše před zavedením sezón).
+const SEASONS = [
+  { id:'fc27', name:'FC 27' },
+  { id:'fc26', name:'FC 26', closed:true },
+];
+const CURRENT_SEASON = 'fc27';
+function partySeason(p) { return p.season || 'fc26'; }
+
+let historySeason = CURRENT_SEASON;
+let historyFilter = 'all';
+
+function setHistorySeason(s) {
+  historySeason = s;
+  renderHistory();
+}
 
 function setHistoryFilter(f) {
   historyFilter = f;
-  document.querySelectorAll('.hf-btn').forEach(b =>
+  document.querySelectorAll('#historyFilter .hf-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.filter === f)
   );
   renderHistory();
+}
+
+const TABLE_WRAP = 'overflow-x:auto;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--line)';
+
+// Souhrnná tabulka přes všechny typy turnajů (součet všech zápasů sezóny)
+function renderOverallTableHTML(seasonParties) {
+  const playerSet = new Set();
+  const partyCount = {};
+  seasonParties.forEach(p => partyPlayers(p).forEach(pid => {
+    if (!getP(pid)) return;
+    playerSet.add(pid);
+    partyCount[pid] = (partyCount[pid] || 0) + 1;
+  }));
+  const rows = calcStandingsFrom(seasonParties.flatMap(p => p.matches || []), [...playerSet]);
+  const rc = ['r1','r2','r3','r4'];
+  const tbody = rows.map((s, i) => {
+    const p = getP(s.id), d = s.gp - s.gm;
+    const avg = s.z ? (s.b / s.z).toFixed(2).replace('.', ',') : '–';
+    return `<tr>
+      <td><span class="rank-badge ${rc[i] || ''}">${i+1}</span></td>
+      <td><div class="player-cell">${badge(p,26)}<div><div class="player-name">${p.name}</div></div></div></td>
+      <td style="color:var(--text-dim)">${partyCount[s.id] || 0}</td>
+      <td>${s.z}</td>
+      <td style="color:#5dbb7a">${s.v}</td>
+      <td style="color:var(--text-dim)">${s.r}</td>
+      <td style="color:var(--red)">${s.pr}</td>
+      <td class="${d>0?'pos':d<0?'neg':''}">${d>0?'+':''}${d}</td>
+      <td style="color:var(--text-dim)">${avg}</td>
+      <td class="pts">${s.b}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="${TABLE_WRAP}">
+    <table class="standings-table">
+      <thead><tr><th>#</th><th>Hráč</th><th title="Počet večírků">Več.</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>GR</th><th title="Průměr bodů na zápas">⌀B</th><th>B</th></tr></thead>
+      <tbody>${tbody}</tbody>
+    </table>
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif;color:var(--text-dim);font-size:0.8rem;margin-top:6px;text-align:center">
+    Součet všech typů turnajů · ${seasonParties.length} večírků · ${seasonParties.reduce((a,p)=>a+(p.matches||[]).length,0)} zápasů · ⌀B = body na zápas
+  </div>`;
+}
+
+// Tabulka jednoho typu turnaje (umístění u LM, jinak klasická tabulka)
+function renderTypeTableHTML(type, typeParties) {
+  const playerSet = new Set();
+  typeParties.forEach(p => partyPlayers(p).forEach(pid => { if (getP(pid)) playerSet.add(pid); }));
+  const playerIds = [...playerSet];
+  if (type === 'cl_basic') return renderClBasicPlacementsHTML(typeParties, playerIds);
+  if (type === 'cl_full')  return renderClFullPlacementsHTML(typeParties, playerIds);
+  return `<div style="${TABLE_WRAP}">
+    <table class="standings-table">
+      <thead><tr><th>#</th><th>Hráč</th><th>Z</th><th>V</th><th>R</th><th>P</th><th>G+</th><th>G−</th><th>GR</th><th>B</th></tr></thead>
+      <tbody>${standingsRowsHTML(typeParties.flatMap(p => p.matches || []), playerIds)}</tbody>
+    </table>
+  </div>`;
 }
 
 function partyType(p) { return p.tournamentType || 'cycle4'; }
@@ -3883,40 +3964,54 @@ function renderClFullPlacementsHTML(parties, playerIds) {
 }
 
 function renderHistory() {
-  // POUZE zápasy z vybraného typu turnaje — žádné mixování
-  const filtered = parties.filter(p => partyType(p) === historyFilter);
+  const season = SEASONS.find(s => s.id === historySeason) || SEASONS[0];
+  const seasonParties = parties.filter(p => partySeason(p) === season.id);
 
-  // Hráči zúčastnění v daném typu
-  const playerSet = new Set();
-  filtered.forEach(p => partyPlayers(p).forEach(pid => playerSet.add(pid)));
-  const playerIds = playerSet.size ? [...playerSet] : PLAYERS.map(p=>p.id);
+  // Přepínač sezón
+  document.getElementById('seasonFilter').innerHTML = SEASONS.map(s =>
+    `<button class="hf-btn${s.id === season.id ? ' active' : ''}" onclick="setHistorySeason('${s.id}')">${s.closed ? '🏁' : '🎮'} ${s.name}${s.closed ? ' · uzavřeno' : ''}</button>`
+  ).join('');
+  document.getElementById('seasonNote').innerHTML = season.closed
+    ? `<div class="store-info-box" style="margin-top:10px;margin-bottom:0">🏁 Sezóna <strong style="color:var(--gold)">${season.name}</strong> je uzavřená — výsledky jsou konečné a už se do nich nic nepřičítá.</div>`
+    : '';
 
-  // Nadpis ukazuje aktuální typ
+  // V rámci sezóny: buď souhrn všech typů, nebo jeden typ (bez mixování)
+  const isAll = historyFilter === 'all';
+  const filtered = isAll ? seasonParties : seasonParties.filter(p => partyType(p) === historyFilter);
+
   const lblEl = document.getElementById('cumulativeFilterLabel');
   const tinfo = TOURNAMENT_TYPES[historyFilter];
   if (lblEl) {
-    if (historyFilter === 'cl_basic' || historyFilter === 'cl_full') {
+    if (isAll) {
+      lblEl.textContent = season.closed ? `🏁 Závěrečná tabulka ${season.name}` : `🏆 Celková tabulka ${season.name}`;
+    } else if (historyFilter === 'cl_basic' || historyFilter === 'cl_full') {
       lblEl.textContent = `🏆 ${tinfo.name} — umístění`;
     } else {
       lblEl.textContent = `${tinfo?.icon || '🏆'} ${tinfo?.name || 'Tabulka'}`;
     }
   }
 
-  // Hlavní obsah — placements pro cl_basic / cl_full, jinak standardní tabulka
   const mainEl = document.getElementById('historyMainContent');
-  if (historyFilter === 'cl_basic') {
-    mainEl.innerHTML = renderClBasicPlacementsHTML(filtered, playerIds);
-  } else if (historyFilter === 'cl_full') {
-    mainEl.innerHTML = renderClFullPlacementsHTML(filtered, playerIds);
+  if (!filtered.length) {
+    mainEl.innerHTML = `<div class="empty-state">${isAll ? `V sezóně ${season.name} zatím není žádný archivovaný večírek.` : 'Žádné večírky tohoto typu v této sezóně.'}</div>`;
+  } else if (isAll) {
+    // Souhrn + pod ním tabulka každého typu, který se v sezóně hrál
+    const sections = Object.keys(TOURNAMENT_TYPES).map(type => {
+      const tp = seasonParties.filter(p => partyType(p) === type);
+      if (!tp.length) return '';
+      const ti = TOURNAMENT_TYPES[type];
+      const isLm = type === 'cl_basic' || type === 'cl_full';
+      return `<div class="section-title">${ti.icon} ${ti.name}${isLm ? ' — umístění' : ''}</div>
+        ${renderTypeTableHTML(type, tp)}`;
+    }).join('');
+    mainEl.innerHTML = renderOverallTableHTML(seasonParties) + sections;
   } else {
-    mainEl.innerHTML = renderStandardStandingsHTML();
-    const allMatches = filtered.flatMap(p => p.matches||[]);
-    renderStandingsTable('cumulativeStandingsBody', allMatches, playerIds);
+    mainEl.innerHTML = renderTypeTableHTML(historyFilter, filtered);
   }
 
   const el = document.getElementById('partyList');
   if (!filtered.length) {
-    el.innerHTML = '<div class="empty-state">Žádné archivované večírky tohoto typu.</div>';
+    el.innerHTML = '<div class="empty-state">Žádné archivované večírky.</div>';
     return;
   }
   el.innerHTML = [...filtered].sort((a,b)=>b.closedAt-a.closedAt).map(p=>{
@@ -3927,7 +4022,7 @@ function renderHistory() {
         <div class="party-date">📅 ${formatDate(p.date)}</div>
         <div class="party-meta">${ti.icon} ${ti.name} · ${(p.matches||[]).length} zápasů</div>
       </div>
-      <button class="party-delete" onclick="deleteParty('${p.id}')" title="Smazat">🗑️</button>
+      ${season.closed ? '' : `<button class="party-delete" onclick="deleteParty('${p.id}')" title="Smazat">🗑️</button>`}
       <span class="party-arrow" onclick="openPartyDetail('${p.id}')">›</span>
     </div>`;
   }).join('');
