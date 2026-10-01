@@ -1653,15 +1653,15 @@
   }
   .intro-top { justify-content: flex-end; }
   .intro-tag-bar {
-    position: absolute; left: 0; right: 0; top: calc(14px + env(safe-area-inset-top));
+    position: absolute; left: 0; right: 0; top: calc(26px + env(safe-area-inset-top));
     display: flex; justify-content: center;
   }
   /* Komiksové hlášky — zóny nad míčem a pod tlačítkem jsou součástí rozložení,
      takže leží na hřišti a nikdy nepřekryjí ostatní obsah */
   .intro-qzone {
     flex: 1 1 0; min-height: 0; width: 100%; max-width: 540px;   /* drží se uvnitř hřiště */
-    display: flex; flex-direction: column; justify-content: center; gap: 16px;
-    padding: 30px 3% 0;
+    display: flex; flex-direction: column; justify-content: center; gap: clamp(18px, 3.4vh, 34px);
+    padding: clamp(44px, 8.5vh, 80px) 3% 0;
     pointer-events: none;
   }
   .intro-quote {
