@@ -1562,6 +1562,14 @@
     color: var(--text-dim);
   }
 
+  .intro-replay {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 16px;
+    color: var(--text-dim); font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 1.5px;
+    padding: 0 12px; min-height: 32px; cursor: pointer; touch-action: manipulation;
+  }
+  .intro-replay:active { color: var(--white); background: rgba(255,255,255,0.12); }
+
   /* ── INTRO (úvodní brána sezóny) ─────────────────────────────────────────── */
   html.intro-open, html.intro-open body { overflow: hidden; }
   #intro {
@@ -1810,6 +1818,19 @@
 // Večírek je standardně každý čtvrtek v 18:00. Jednorázová změna termínu:
 // nastav např. '2026-10-09T19:00' (místní čas), po uplynutí se vrátí na čtvrtky.
 const NEXT_PARTY_OVERRIDE = null;
+
+// Intro se po vstupu znovu neukazuje dalších INTRO_HIDE_HOURS hodin (aby neotravovalo
+// při refreshování výsledků). Tlačítko "▶ Intro" v hlavičce ho pustí kdykoli znovu.
+const INTRO_HIDE_HOURS = 8;
+const INTRO_SKIP = (() => {
+  try { return Date.now() - Number(localStorage.getItem('fifa_intro_seen') || 0) < INTRO_HIDE_HOURS * 3600e3; }
+  catch { return false; }
+})();
+if (INTRO_SKIP) document.getElementById('intro').remove();
+function replayIntro() {
+  try { localStorage.removeItem('fifa_intro_seen'); } catch {}
+  location.reload();
+}
 const PARTY_DAY = 4, PARTY_HOUR = 18;
 // Večírek "běží" od začátku do půlnoci téhož dne — do té doby odpočet stojí na nule
 const partyEnd = d => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
@@ -1858,7 +1879,7 @@ const INTRO_PITCH_SVG = `<svg class="intro-pitch" viewBox="0 0 300 440" aria-hid
 document.querySelectorAll('#intro .gate-inner').forEach(el => el.innerHTML = INTRO_PITCH_SVG);
 
 // ── Fotbalový míč (klasický vzor: středový pětiúhelník + 5 okrajových) ──
-(() => {
+if (!INTRO_SKIP) (() => {
   const P = (ang, r, cx = 50, cy = 50) => {
     const a = ang * Math.PI / 180;
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
@@ -1904,12 +1925,14 @@ const introFx = (() => {
   let W = 0, H = 0, dpr = 1, rockets = [], sparks = [], running = true, launching = true;
   const start = performance.now();
   let nextLaunch = start + 700, last = start;
+  let density = 1;   // na mobilu (úzký displej) jen 2/3 raket
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = () => COLORS[Math.floor(Math.random() * COLORS.length)];
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = canvas.clientWidth; H = canvas.clientHeight;
+    density = W < 600 ? 2 / 3 : 1;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
@@ -1959,9 +1982,9 @@ const introFx = (() => {
 
     if (launching && now >= nextLaunch) {
       launch();
-      if (Math.random() < 0.35) launch();
+      if (Math.random() < 0.35 * density) launch();
       // prvních ~10 s hustá salva, potom volnější tempo
-      nextLaunch = now + (now - start < 10000 ? rnd(140, 300) : rnd(600, 1200));
+      nextLaunch = now + (now - start < 10000 ? rnd(140, 300) : rnd(600, 1200)) / density;
     }
     rockets = rockets.filter(r => {
       r.y += r.vy * dt;
@@ -1994,13 +2017,17 @@ const introFx = (() => {
   return { burst, stop() { running = false; window.removeEventListener('resize', resize); } };
 })();
 
-document.documentElement.classList.add('intro-open');
-tickIntroCountdown();
-let introTimer = setInterval(tickIntroCountdown, 1000);
+let introTimer = null;
+if (!INTRO_SKIP) {
+  document.documentElement.classList.add('intro-open');
+  tickIntroCountdown();
+  introTimer = setInterval(tickIntroCountdown, 1000);
+}
 
 function enterParty() {
   const intro = document.getElementById('intro');
   if (!intro || intro.classList.contains('opening')) return;
+  try { localStorage.setItem('fifa_intro_seen', String(Date.now())); } catch {}
   introFx.burst(7);            // závěrečná salva
   intro.classList.add('opening');
   clearInterval(introTimer);
@@ -2014,6 +2041,7 @@ function enterParty() {
 </script>
 
 <header>
+  <button class="intro-replay" onclick="replayIntro()" title="Přehrát úvodní intro">▶ Intro</button>
   <h1>FIFA Večírky</h1>
   <p>Sleduj • Soutěž • Vyhraj</p>
 </header>
