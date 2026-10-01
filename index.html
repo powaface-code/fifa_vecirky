@@ -2458,7 +2458,9 @@ function renderCycleSchedule() {
     const p1 = getP(m.p1), p2 = getP(m.p2);
     const isPlayed  = counts[i] > minCount;
     const isCurrent = i === currentIdx;
-    return `<div class="sched-item${isCurrent ? ' current' : isPlayed ? ' played' : ''}">
+    // Klik předvyplní formulář (rozpis se točí dokola, takže vždy nový zápas)
+    return `<div class="sched-item clickable${isCurrent ? ' current' : isPlayed ? ' played' : ''}"
+      onclick="setPendingMatch('${m.p1}','${m.p2}',null,'Zápas ${i+1}')">
       <span class="sched-num">${i+1}</span>
       <div class="sched-player">
         <div>${p1.name}</div>
