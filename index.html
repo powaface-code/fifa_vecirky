@@ -1610,10 +1610,10 @@
   .intro-pitch .p-gold { stroke: rgba(245,200,66,0.6); }
   .intro-pitch > * {
     stroke-dasharray: 1; stroke-dashoffset: 1;
-    animation: pitchDraw 6.4s ease-out forwards;
+    animation: pitchDraw 3.2s ease-out forwards;
   }
-  .intro-pitch > *:nth-child(2) { animation-delay: 2s; }
-  .intro-pitch > *:nth-child(n+3) { animation-delay: 4.4s; }
+  .intro-pitch > *:nth-child(2) { animation-delay: 1s; }
+  .intro-pitch > *:nth-child(n+3) { animation-delay: 2.2s; }
   @keyframes pitchDraw { to { stroke-dashoffset: 0; } }
 
   .gate-seam {
@@ -1690,10 +1690,10 @@
   }
   .intro-item { position: relative; opacity: 0; animation: introIn 0.7s ease-out forwards; }
   .intro-tag           { animation-delay: 0.3s; }
-  .intro-title         { animation-delay: 1.2s; }
-  .intro-27-wrap       { animation-delay: 1.4s; }
-  .intro-countdown     { animation-delay: 1.8s; }
-  .intro-enter         { animation-delay: 2.3s; }
+  .intro-title         { animation-delay: 5.5s; }
+  .intro-27-wrap       { animation-delay: 5.8s; }
+  .intro-countdown     { animation-delay: 6.9s; }
+  .intro-enter         { animation-delay: 7.3s; }
   @keyframes introIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
   .intro-tag {
@@ -1718,7 +1718,7 @@
     fill: rgba(0,0,0,0.28); stroke: rgba(245,200,66,0.75); stroke-width: 1.4;
     stroke-dasharray: 1; stroke-dashoffset: 1;
     transform: rotate(-90deg); transform-origin: 50% 50%;
-    animation: pitchDraw 1.3s ease-out 1.5s forwards;
+    animation: pitchDraw 1.3s ease-out 5.9s forwards;
   }
   .intro-27 {
     position: relative;
@@ -1728,7 +1728,7 @@
     background: linear-gradient(135deg, var(--white) 0%, var(--gold) 50%, var(--gold-dark) 100%);
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 22px rgba(245,200,66,0.35));
-    animation: heartBeat 1.25s ease-in-out 2.2s infinite;
+    animation: heartBeat 1.25s ease-in-out 7s infinite;
   }
   /* Tlukot srdce: dva rychlé údery a pauza */
   @keyframes heartBeat {
@@ -1941,7 +1941,8 @@ const introFx = (() => {
   const MAX_SPARKS = 1600;
   let W = 0, H = 0, dpr = 1, rockets = [], sparks = [], running = true, launching = true;
   const start = performance.now();
-  let nextLaunch = start + 700, last = start;
+  const FX_START = 8000;   // ohňostroj začne až po hřišti, nápisu a tlačítku
+  let nextLaunch = start + FX_START, last = start;
   let density = 0.3; // hustota raket (na úzkém displeji ještě nižší)
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = () => COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -2001,7 +2002,7 @@ const introFx = (() => {
       launch();
       if (Math.random() < 0.35 * density) launch();
       // prvních ~10 s hustá salva, potom volnější tempo
-      nextLaunch = now + (now - start < 10000 ? rnd(280, 600) : rnd(600, 1200)) / density;
+      nextLaunch = now + (now - start < FX_START + 10000 ? rnd(280, 600) : rnd(600, 1200)) / density;
     }
     rockets = rockets.filter(r => {
       r.y += r.vy * dt;
@@ -2074,8 +2075,8 @@ function startIntroQuotes() {
     slot.el.classList.add('show');
   };
   const later = (fn, ms) => introQuoteTimers.push(setTimeout(fn, ms));
-  later(() => show(slots[0]), 2400);
-  later(() => show(slots[1]), 3700);
+  later(() => show(slots[0]), 8300);
+  later(() => show(slots[1]), 9600);
   // každé ~4 s se vymění jedna z dvojice (střídavě)
   let turn = 0;
   const swap = () => {
@@ -2085,7 +2086,7 @@ function startIntroQuotes() {
     later(() => show(slot), 320);
     later(swap, 4000);
   };
-  later(swap, 3700 + 4000);
+  later(swap, 9600 + 4000);
 }
 
 let introTimer = null;
