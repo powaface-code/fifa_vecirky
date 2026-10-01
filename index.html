@@ -1659,36 +1659,29 @@
   /* Komiksové hlášky — zóny nad míčem a pod tlačítkem jsou součástí rozložení,
      takže leží na hřišti a nikdy nepřekryjí ostatní obsah */
   .intro-qzone {
-    flex: 1 1 0; min-height: 0; width: 100%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    flex: 1 1 0; min-height: 0; width: 100%; max-width: 540px;   /* drží se uvnitř hřiště */
+    display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center;
+    gap: 7px 18px;                 /* krátké hlášky se vejdou vedle sebe */
     pointer-events: none;
   }
   .intro-qzone.top { padding-top: 30px; }
   .intro-quote {
     --tilt: -3deg; --qc: #ffe14a;
     max-width: min(86vw, 470px);
-    font-family: 'Bangers', 'Bebas Neue', sans-serif; font-size: 1rem; line-height: 1.12; letter-spacing: 0.8px;
+    font-family: 'Bangers', 'Bebas Neue', sans-serif;
+    font-size: clamp(0.8rem, 1.85vh, 1.25rem); line-height: 1.12; letter-spacing: 0.8px;
     color: var(--qc);
     -webkit-text-stroke: 1px #111; paint-order: stroke fill;
     text-shadow: 2px 2px 0 var(--c-red), 3.5px 3.5px 0 #111;
     opacity: 0; transform: rotate(var(--tilt)) scale(0);
   }
   .intro-quote.show { animation: quotePop 0.5s cubic-bezier(0.3, 1.7, 0.5, 1) forwards; }
-  .intro-quote.hide { animation: quoteOut 0.3s ease-in forwards; }
   @keyframes quotePop {
     from { opacity: 0; transform: rotate(var(--tilt)) scale(0); }
     to   { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
   }
-  @keyframes quoteOut {
-    from { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
-    to   { opacity: 0; transform: rotate(var(--tilt)) scale(0.8); }
-  }
-  @media (min-width: 760px) and (min-height: 900px) {
-    .intro-quote { font-size: 1.3rem; }
-  }
   .intro-item { position: relative; opacity: 0; animation: introIn 0.7s ease-out forwards; }
   .intro-tag           { animation-delay: 0.3s; }
-  .intro-ball-wrap     { animation-delay: 0.7s; }
   .intro-title         { animation-delay: 1.2s; }
   .intro-27-wrap       { animation-delay: 1.4s; }
   .intro-countdown     { animation-delay: 1.8s; }
@@ -1702,45 +1695,13 @@
       linear-gradient(#0a0d14, #0a0d14) padding-box,
       linear-gradient(90deg, var(--c-red), var(--c-white), var(--c-blue)) border-box;
   }
-  .intro-ball-wrap { width: 58px; height: 58px; }
-  .intro-ball { width: 100%; height: 100%; animation: ballBeat 1.25s ease-in-out infinite; }
-  .intro-ball svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6)); }
-  .intro-ball-glow {
-    position: absolute; inset: -10px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(244,244,240,0.35), transparent 70%);
-    animation: glowBeat 1.25s ease-in-out infinite;
-  }
-  .intro-comic {
-    position: absolute; left: calc(100% + 4px); top: 2px;
-    font-family: 'Bangers', 'Bebas Neue', sans-serif; font-size: 1.45rem; letter-spacing: 1px;
-    white-space: nowrap; color: #ffe14a;
-    -webkit-text-stroke: 1.2px #111; paint-order: stroke fill;
-    text-shadow: 2.5px 2.5px 0 var(--c-red), 4px 4px 0 #111;
-    transform: rotate(-9deg) scale(0); transform-origin: left bottom;
-    animation: comicPop 0.5s cubic-bezier(0.3, 1.7, 0.5, 1) 2s forwards;
-  }
-  @keyframes comicPop { to { transform: rotate(-9deg) scale(1); } }
-  /* Tlukot srdce: dva rychlé údery a pauza */
-  @keyframes ballBeat {
-    0%, 40%, 100% { transform: scale(1); }
-    10% { transform: scale(1.2); }
-    20% { transform: scale(1.02); }
-    30% { transform: scale(1.13); }
-  }
-  @keyframes glowBeat {
-    0%, 40%, 100% { transform: scale(0.9); opacity: 0.35; }
-    10% { transform: scale(1.5); opacity: 0.9; }
-    20% { transform: scale(1.1); opacity: 0.5; }
-    30% { transform: scale(1.35); opacity: 0.75; }
-  }
-
   .intro-welcome {
     font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(1.6rem, 7vw, 2.4rem); letter-spacing: 7px; color: var(--c-white);
     text-shadow: -2px 0 12px rgba(239,45,74,0.55), 2px 0 12px rgba(47,125,240,0.55);
   }
   .intro-27-wrap {
-    font-size: clamp(4.2rem, min(28vw, 15vh), 9rem);
+    font-size: clamp(3.4rem, min(28vw, 12vh), 9rem);
     width: 1.55em; height: 1.55em; flex: none;
     display: grid; place-items: center;
   }
@@ -1810,7 +1771,6 @@
   #intro.opening .intro-qzone { opacity: 0; transition: opacity 0.3s ease; }
   #intro.opening .intro-item       { animation: outFade 0.4s ease-in both; }
   #intro.opening .intro-tag        { animation: outUp 0.45s ease-in both; }
-  #intro.opening .intro-ball-wrap  { animation: outZoom 0.55s ease-in 0.05s both; }
   #intro.opening .intro-title      { animation: outTitle 0.55s ease-in 0.1s both; }
   #intro.opening .intro-27-wrap    { animation: outRing 0.6s ease-in 0.15s both; }
   #intro.opening .intro-countdown  { animation: outDown 0.45s ease-in 0.05s both; }
@@ -1832,7 +1792,6 @@
   #intro.opening .gate-right { transform: translateX(102%); }
 
   @media (max-height: 640px) {
-    .intro-ball-wrap { width: 46px; height: 46px; }
     .intro-top, .intro-bottom, .intro-content { gap: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1856,11 +1815,6 @@
     <div class="intro-tag-bar"><div class="intro-item intro-tag">FIFA VEČÍRKY · FC 27</div></div>
     <div class="intro-top">
       <div class="intro-qzone top" id="introQTop"></div>
-      <div class="intro-item intro-ball-wrap">
-        <div class="intro-ball-glow"></div>
-        <div class="intro-ball" id="introBall"></div>
-        <div class="intro-comic">Roteiro ty vole!</div>
-      </div>
       <div class="intro-item intro-title intro-welcome">Vítej v sezóně</div>
     </div>
 
@@ -1961,31 +1915,6 @@ if (!INTRO_SKIP) {
   const pitch = buildIntroPitch();
   document.querySelectorAll('#intro .gate-inner').forEach(el => el.innerHTML = pitch);
 }
-
-// ── Míč: kreslený Roteiro (stříbrný, tmavé pruhy, světle modrá mřížka) ──
-if (!INTRO_SKIP) document.getElementById('introBall').innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
-  <defs>
-    <clipPath id="introBallClip"><circle cx="50" cy="50" r="46"/></clipPath>
-    <radialGradient id="introBallShade" cx="36%" cy="28%" r="85%">
-      <stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#d5dbdc"/><stop offset="1" stop-color="#8d979b"/>
-    </radialGradient>
-  </defs>
-  <circle cx="50" cy="50" r="46" fill="url(#introBallShade)"/>
-  <g clip-path="url(#introBallClip)">
-    <g fill="none" stroke="#6fcbe6" stroke-width="0.9" opacity="0.75">
-      <ellipse cx="50" cy="50" rx="15" ry="46"/><ellipse cx="50" cy="50" rx="32" ry="46"/>
-      <path d="M4 34 Q50 46 96 34"/><path d="M4 50 Q50 62 96 50"/>
-    </g>
-    <g fill="#23262d">
-      <path d="M0 58 Q50 80 100 58 L100 69 Q50 93 0 69 Z"/>
-      <path d="M9 66 Q21 36 45 12 L52 17 Q31 40 21 71 Z"/>
-      <path d="M91 66 Q79 36 55 12 L48 17 Q69 40 79 71 Z"/>
-      <path d="M17 17 L33 9 L29 20 Z"/><path d="M83 17 L67 9 L71 20 Z"/>
-    </g>
-    <ellipse cx="35" cy="27" rx="13" ry="7" fill="#fff" opacity="0.55" transform="rotate(-28 35 27)"/>
-  </g>
-  <circle cx="50" cy="50" r="46" fill="none" stroke="#15171c" stroke-width="3.2"/>
-</svg>`;
 
 // ── Ohňostroj v klubových barvách ──
 const introFx = (() => {
@@ -2090,56 +2019,41 @@ const introFx = (() => {
   return { burst, stop() { running = false; window.removeEventListener('resize', resize); } };
 })();
 
-// ── Komiksové hlášky (Okresní přebor) ──
-// Zobrazují se v zónách nad míčem a pod tlačítkem. Na vyšším displeji jsou vidět
-// 4 najednou, na nižším 2; zbylé se na svých místech střídají.
-const INTRO_QUOTES = [
+// ── Komiksové hlášky (Okresní přebor) — všechny naskočí a zůstanou ──
+// Nahoře (nad nápisem) je víc místa než pod tlačítkem, proto 6 + 2.
+const INTRO_QUOTES_TOP = [
   '„Když nastoupí špekáček, dostanete na fráček."',
-  '„Na žádnej ťukec nemáte, jste dřeváci a proto hrajete tady."',
   '„Jak vůbec víte, že nemám licenci?!"',
+  '„Na žádnej ťukec nemáte, jste dřeváci a proto hrajete tady."',
   '„Pocem pocem, kams šel?"',
-  '„Tohle teď hodně dlouho nebudeš potřebovat, chlapečku."',
+  '„Roteiro ty vole!"',
   '„Dlouhý nakopávaný balóny a důraz v soubojích."',
+];
+const INTRO_QUOTES_BOTTOM = [
+  '„Tohle teď hodně dlouho nebudeš potřebovat, chlapečku."',
   '„Každýho jebeš a sám hraješ úplný hovno ty vole, úplný hovno."',
 ];
 let introQuoteTimers = [];
 function startIntroQuotes() {
-  const zones = [document.getElementById('introQTop'), document.getElementById('introQBottom')];
-  if (!zones[0] || !zones[1]) return;
-  const perZone = window.innerHeight >= 780 ? 2 : 1;
   const colors = ['#ffe14a', '#f4f4f0', '#8fd0ff'];
-  const slots = [];
-  for (let i = 0; i < perZone; i++) zones.forEach(z => {
-    const el = document.createElement('div');
-    el.className = 'intro-quote';
-    z.appendChild(el);
-    slots.push({ el, list: [], idx: 0 });
+  const els = [];
+  [['introQTop', INTRO_QUOTES_TOP], ['introQBottom', INTRO_QUOTES_BOTTOM]].forEach(([id, list]) => {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+    list.forEach(text => {
+      const el = document.createElement('div');
+      const i = els.length;
+      el.className = 'intro-quote';
+      el.textContent = text;
+      el.style.setProperty('--tilt', (i % 2 ? 1 : -1) * (1 + (i * 7 % 5) * 0.4) + 'deg');
+      el.style.setProperty('--qc', colors[i % colors.length]);
+      zone.appendChild(el);
+      els.push(el);
+    });
   });
-  // hlášky náhodně rozdělit mezi místa
-  INTRO_QUOTES.slice().sort(() => Math.random() - 0.5)
-    .forEach((q, i) => slots[i % slots.length].list.push(q));
-
-  let n = 0;
-  const showNext = slot => {
-    slot.el.textContent = slot.list[slot.idx++ % slot.list.length];
-    slot.el.style.setProperty('--tilt', (n % 2 ? 1 : -1) * (1.5 + Math.random() * 2.5) + 'deg');
-    slot.el.style.setProperty('--qc', colors[n++ % colors.length]);
-    slot.el.classList.remove('hide');
-    void slot.el.offsetWidth;          // restart animace
-    slot.el.classList.add('show');
-  };
-  const later = (fn, ms) => introQuoteTimers.push(setTimeout(fn, ms));
-  slots.forEach((slot, k) => {
-    later(() => showNext(slot), 2800 + k * 1100);
-    if (slot.list.length < 2) return;   // jediná hláška na místě zůstává natrvalo
-    const swap = () => {
-      slot.el.classList.remove('show');
-      slot.el.classList.add('hide');
-      later(() => showNext(slot), 320);
-      later(swap, 6000);
-    };
-    later(swap, 2800 + 5500 + k * 1500);
-  });
+  // naskakují v náhodném pořadí, jedna za ~0,8 s
+  els.sort(() => Math.random() - 0.5).forEach((el, k) =>
+    introQuoteTimers.push(setTimeout(() => el.classList.add('show'), 2400 + k * 800)));
 }
 
 let introTimer = null;
