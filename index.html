@@ -1660,22 +1660,30 @@
      takže leží na hřišti a nikdy nepřekryjí ostatní obsah */
   .intro-qzone {
     flex: 1 1 0; min-height: 0; width: 100%; max-width: 540px;   /* drží se uvnitř hřiště */
-    display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: center;
-    gap: 7px 18px;                 /* krátké hlášky se vejdou vedle sebe */
+    display: flex; flex-direction: column; justify-content: center; gap: 16px;
+    padding: 30px 3% 0;
     pointer-events: none;
   }
-  .intro-qzone.top { padding-top: 30px; }
   .intro-quote {
-    --tilt: -3deg; --qc: #ffe14a;
-    max-width: min(86vw, 470px);
+    --tilt: -7deg; --qc: #ffe14a;
+    max-width: 80%; min-height: 2.3em;
+    display: flex; align-items: center;
     font-family: 'Bangers', 'Bebas Neue', sans-serif;
-    font-size: clamp(0.8rem, 1.85vh, 1.25rem); line-height: 1.12; letter-spacing: 0.8px;
+    font-size: clamp(0.95rem, 2.3vh, 1.45rem); line-height: 1.12; letter-spacing: 0.8px;
     color: var(--qc);
     -webkit-text-stroke: 1px #111; paint-order: stroke fill;
     text-shadow: 2px 2px 0 var(--c-red), 3.5px 3.5px 0 #111;
     opacity: 0; transform: rotate(var(--tilt)) scale(0);
   }
+  /* první vlevo a nakloněná doleva, druhá vpravo a nakloněná doprava */
+  .intro-quote.qa { align-self: flex-start; text-align: left;  transform-origin: left center; }
+  .intro-quote.qb { align-self: flex-end;   text-align: right; transform-origin: right center; }
   .intro-quote.show { animation: quotePop 0.5s cubic-bezier(0.3, 1.7, 0.5, 1) forwards; }
+  .intro-quote.hide { animation: quoteOut 0.3s ease-in forwards; }
+  @keyframes quoteOut {
+    from { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
+    to   { opacity: 0; transform: rotate(var(--tilt)) scale(0.8); }
+  }
   @keyframes quotePop {
     from { opacity: 0; transform: rotate(var(--tilt)) scale(0); }
     to   { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
@@ -1720,6 +1728,14 @@
     background: linear-gradient(135deg, var(--white) 0%, var(--gold) 50%, var(--gold-dark) 100%);
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 22px rgba(245,200,66,0.35));
+    animation: heartBeat 1.25s ease-in-out 2.2s infinite;
+  }
+  /* Tlukot srdce: dva rychlé údery a pauza */
+  @keyframes heartBeat {
+    0%, 40%, 100% { transform: scale(1); }
+    10% { transform: scale(1.14); }
+    20% { transform: scale(1.02); }
+    30% { transform: scale(1.09); }
   }
   .intro-27::before, .intro-27::after {
     content: attr(data-text); position: absolute; inset: 0;
@@ -1834,7 +1850,6 @@
         </div>
       </div>
       <button class="intro-item intro-enter" id="introEnter" onclick="enterParty()">Vstoupit na večírek</button>
-      <div class="intro-qzone bottom" id="introQBottom"></div>
     </div>
   </div>
 </div>
@@ -2019,41 +2034,58 @@ const introFx = (() => {
   return { burst, stop() { running = false; window.removeEventListener('resize', resize); } };
 })();
 
-// ── Komiksové hlášky (Okresní přebor) — všechny naskočí a zůstanou ──
-// Nahoře (nad nápisem) je víc místa než pod tlačítkem, proto 6 + 2.
-const INTRO_QUOTES_TOP = [
+// ── Komiksové hlášky (Okresní přebor) ──
+// Nahoře jsou vždy dvě (každá nakloněná na jinou stranu) a postupně se střídají.
+const INTRO_QUOTES = [
   '„Když nastoupí špekáček, dostanete na fráček."',
   '„Jak vůbec víte, že nemám licenci?!"',
   '„Na žádnej ťukec nemáte, jste dřeváci a proto hrajete tady."',
   '„Pocem pocem, kams šel?"',
   '„Roteiro ty vole!"',
   '„Dlouhý nakopávaný balóny a důraz v soubojích."',
-];
-const INTRO_QUOTES_BOTTOM = [
   '„Tohle teď hodně dlouho nebudeš potřebovat, chlapečku."',
   '„Každýho jebeš a sám hraješ úplný hovno ty vole, úplný hovno."',
 ];
 let introQuoteTimers = [];
 function startIntroQuotes() {
+  const zone = document.getElementById('introQTop');
+  if (!zone) return;
   const colors = ['#ffe14a', '#f4f4f0', '#8fd0ff'];
-  const els = [];
-  [['introQTop', INTRO_QUOTES_TOP], ['introQBottom', INTRO_QUOTES_BOTTOM]].forEach(([id, list]) => {
-    const zone = document.getElementById(id);
-    if (!zone) return;
-    list.forEach(text => {
-      const el = document.createElement('div');
-      const i = els.length;
-      el.className = 'intro-quote';
-      el.textContent = text;
-      el.style.setProperty('--tilt', (i % 2 ? 1 : -1) * (1 + (i * 7 % 5) * 0.4) + 'deg');
-      el.style.setProperty('--qc', colors[i % colors.length]);
-      zone.appendChild(el);
-      els.push(el);
-    });
+  const slots = [['qa', -1], ['qb', 1]].map(([cls, dir]) => {
+    const el = document.createElement('div');
+    el.className = 'intro-quote ' + cls;
+    zone.appendChild(el);
+    return { el, dir };
   });
-  // naskakují v náhodném pořadí, jedna za ~0,8 s
-  els.sort(() => Math.random() - 0.5).forEach((el, k) =>
-    introQuoteTimers.push(setTimeout(() => el.classList.add('show'), 2400 + k * 800)));
+  let queue = [], n = 0;
+  const nextQuote = () => {
+    if (!queue.length) {
+      const shown = slots.map(sl => sl.el.textContent);
+      queue = INTRO_QUOTES.filter(q => !shown.includes(q)).sort(() => Math.random() - 0.5);
+    }
+    return queue.pop();
+  };
+  const show = slot => {
+    slot.el.textContent = nextQuote();
+    slot.el.style.setProperty('--tilt', slot.dir * (5.5 + Math.random() * 3) + 'deg');
+    slot.el.style.setProperty('--qc', colors[n++ % colors.length]);
+    slot.el.classList.remove('hide');
+    void slot.el.offsetWidth;          // restart animace
+    slot.el.classList.add('show');
+  };
+  const later = (fn, ms) => introQuoteTimers.push(setTimeout(fn, ms));
+  later(() => show(slots[0]), 2400);
+  later(() => show(slots[1]), 3700);
+  // každé ~4 s se vymění jedna z dvojice (střídavě)
+  let turn = 0;
+  const swap = () => {
+    const slot = slots[turn++ % 2];
+    slot.el.classList.remove('show');
+    slot.el.classList.add('hide');
+    later(() => show(slot), 320);
+    later(swap, 4000);
+  };
+  later(swap, 3700 + 4000);
 }
 
 let introTimer = null;
