@@ -1652,6 +1652,32 @@
     display: flex; flex-direction: column; align-items: center; gap: 18px;
   }
   .intro-top { justify-content: flex-end; }
+  .intro-tag-bar {
+    position: absolute; left: 0; right: 0; top: calc(14px + env(safe-area-inset-top));
+    display: flex; justify-content: center;
+  }
+  /* Komiksové hlášky — střídají se v prostoru mezi štítkem a míčem */
+  .intro-quotes {
+    flex: 1 1 0; min-height: 0; width: 100%; padding-top: 34px;
+    display: grid; place-items: center;
+  }
+  .intro-quote {
+    --tilt: -4deg; --qc: #ffe14a;
+    max-width: min(330px, 92vw);
+    font-family: 'Bangers', 'Bebas Neue', sans-serif; font-size: 1.3rem; line-height: 1.12; letter-spacing: 1px;
+    color: var(--qc);
+    -webkit-text-stroke: 1.2px #111; paint-order: stroke fill;
+    text-shadow: 2.5px 2.5px 0 var(--c-red), 4px 4px 0 #111;
+    opacity: 0; transform: rotate(var(--tilt)) scale(0);
+  }
+  .intro-quote.show { animation: quoteCycle 4.6s ease-in-out forwards; }
+  @keyframes quoteCycle {
+    0%   { opacity: 0; transform: rotate(var(--tilt)) scale(0); }
+    7%   { opacity: 1; transform: rotate(var(--tilt)) scale(1.12); }
+    11%  { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
+    90%  { opacity: 1; transform: rotate(var(--tilt)) scale(1); }
+    100% { opacity: 0; transform: rotate(var(--tilt)) scale(0.85); }
+  }
   .intro-bottom { justify-content: flex-start; }
   .intro-item { position: relative; opacity: 0; animation: introIn 0.7s ease-out forwards; }
   .intro-tag           { animation-delay: 0.3s; }
@@ -1774,6 +1800,7 @@
   /* ── Otevření brány: 1) obsah odletí  2) čáry hřiště se smažou  3) šev a brána ── */
   #intro.opening .intro-content { pointer-events: none; }
   #intro.opening .intro-fx, #intro.opening .intro-scan { opacity: 0; }
+  #intro.opening .intro-quotes { opacity: 0; transition: opacity 0.3s ease; }
   #intro.opening .intro-item       { animation: outFade 0.4s ease-in both; }
   #intro.opening .intro-tag        { animation: outUp 0.45s ease-in both; }
   #intro.opening .intro-ball-wrap  { animation: outZoom 0.55s ease-in 0.05s both; }
@@ -1800,6 +1827,7 @@
   @media (max-height: 640px) {
     .intro-ball-wrap { width: 46px; height: 46px; }
     .intro-27-wrap { font-size: clamp(4.2rem, 22vw, 6rem); }
+    .intro-quote { font-size: 1.05rem; }
     .intro-top, .intro-bottom, .intro-content { gap: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1820,8 +1848,9 @@
   <canvas class="intro-fx" id="introFx"></canvas>
   <div class="intro-scan"></div>
   <div class="intro-content">
+    <div class="intro-tag-bar"><div class="intro-item intro-tag">FIFA VEČÍRKY · FC 27</div></div>
     <div class="intro-top">
-      <div class="intro-item intro-tag">FIFA VEČÍRKY · FC 27</div>
+      <div class="intro-quotes"><div class="intro-quote" id="introQuote"></div></div>
       <div class="intro-item intro-ball-wrap">
         <div class="intro-ball-glow"></div>
         <div class="intro-ball" id="introBall"></div>
@@ -2041,8 +2070,42 @@ const introFx = (() => {
   return { burst, stop() { running = false; window.removeEventListener('resize', resize); } };
 })();
 
+// ── Komiksové hlášky (Okresní přebor) — střídají se v náhodném pořadí ──
+const INTRO_QUOTES = [
+  '„Když nastoupí špekáček, dostanete na fráček."',
+  '„Jak vůbec víte, že nemám licenci?!"',
+  '„Tohle teď hodně dlouho nebudeš potřebovat, chlapečku."',
+  '„Dlouhý nakopávaný balóny a důraz v soubojích."',
+  '„Na žádnej ťukec nemáte, jste dřeváci a prohrajete tady."',
+  '„Každýho jebeš a sám hraješ úplný hovno ty vole, úplný hovno."',
+  '„Pocem pocem, kams šel?"',
+];
+let introQuoteTimer = null;
+function startIntroQuotes() {
+  const el = document.getElementById('introQuote');
+  if (!el) return;
+  const colors = ['#ffe14a', '#f4f4f0', '#8fd0ff'];
+  let order = [], n = 0;
+  const next = () => {
+    if (!order.length) {
+      const last = el.textContent;
+      order = INTRO_QUOTES.slice().sort(() => Math.random() - 0.5);
+      if (order[order.length - 1] === last) order.reverse();   // ne dvakrát stejná po sobě
+    }
+    el.textContent = order.pop();
+    el.style.setProperty('--tilt', (n % 2 ? 1 : -1) * (2 + Math.random() * 4) + 'deg');
+    el.style.setProperty('--qc', colors[n % colors.length]);
+    n++;
+    el.classList.remove('show');
+    void el.offsetWidth;            // restart animace
+    el.classList.add('show');
+  };
+  setTimeout(() => { if (document.getElementById('intro')) { next(); introQuoteTimer = setInterval(next, 4800); } }, 2800);
+}
+
 let introTimer = null;
 if (!INTRO_SKIP) {
+  startIntroQuotes();
   document.documentElement.classList.add('intro-open');
   tickIntroCountdown();
   introTimer = setInterval(tickIntroCountdown, 1000);
@@ -2055,6 +2118,7 @@ function enterParty() {
   introFx.burst(7);            // závěrečná salva
   intro.classList.add('opening');
   clearInterval(introTimer);
+  clearInterval(introQuoteTimer);
   window.scrollTo(0, 0);
   setTimeout(() => {
     introFx.stop();
