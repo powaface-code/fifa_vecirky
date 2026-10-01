@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>FIFA Večírky</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --green: #1a7a3c;
@@ -1562,11 +1562,11 @@
     color: var(--text-dim);
   }
 
+  .app-footer { text-align: center; padding: 0 14px 34px; }
   .intro-replay {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 16px;
-    color: var(--text-dim); font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem; letter-spacing: 1.5px;
-    padding: 0 12px; min-height: 32px; cursor: pointer; touch-action: manipulation;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 18px;
+    color: var(--text-dim); font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem; letter-spacing: 1.5px;
+    padding: 0 16px; min-height: 36px; cursor: pointer; touch-action: manipulation;
   }
   .intro-replay:active { color: var(--white); background: rgba(255,255,255,0.12); }
 
@@ -1613,8 +1613,7 @@
     animation: pitchDraw 1.6s ease-out forwards;
   }
   .intro-pitch > *:nth-child(2) { animation-delay: 0.5s; }
-  .intro-pitch > *:nth-child(3) { animation-delay: 0.8s; }
-  .intro-pitch > *:nth-child(n+4) { animation-delay: 1.1s; }
+  .intro-pitch > *:nth-child(n+3) { animation-delay: 1.1s; }
   @keyframes pitchDraw { to { stroke-dashoffset: 0; } }
 
   .gate-seam {
@@ -1642,15 +1641,23 @@
 
   .intro-content {
     position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 22px;
-    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center;
+    gap: 18px;
+    padding: calc(20px + env(safe-area-inset-bottom)) 20px;
     text-align: center;
   }
+  /* Horní a dolní blok jsou stejně vysoké → "27" sedí přesně ve středu hřiště */
+  .intro-top, .intro-bottom {
+    flex: 1 1 0; min-height: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .intro-top { justify-content: flex-end; }
+  .intro-bottom { justify-content: flex-start; }
   .intro-item { position: relative; opacity: 0; animation: introIn 0.7s ease-out forwards; }
   .intro-tag           { animation-delay: 0.3s; }
   .intro-ball-wrap     { animation-delay: 0.7s; }
   .intro-title         { animation-delay: 1.2s; }
+  .intro-27-wrap       { animation-delay: 1.4s; }
   .intro-countdown     { animation-delay: 1.8s; }
   .intro-enter         { animation-delay: 2.3s; }
   @keyframes introIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
@@ -1670,6 +1677,16 @@
     background: radial-gradient(circle, rgba(244,244,240,0.35), transparent 70%);
     animation: glowBeat 1.25s ease-in-out infinite;
   }
+  .intro-comic {
+    position: absolute; left: calc(100% + 4px); top: 2px;
+    font-family: 'Bangers', 'Bebas Neue', sans-serif; font-size: 1.45rem; letter-spacing: 1px;
+    white-space: nowrap; color: #ffe14a;
+    -webkit-text-stroke: 1.2px #111; paint-order: stroke fill;
+    text-shadow: 2.5px 2.5px 0 var(--c-red), 4px 4px 0 #111;
+    transform: rotate(-9deg) scale(0); transform-origin: left bottom;
+    animation: comicPop 0.5s cubic-bezier(0.3, 1.7, 0.5, 1) 2s forwards;
+  }
+  @keyframes comicPop { to { transform: rotate(-9deg) scale(1); } }
   /* Tlukot srdce: dva rychlé údery a pauza */
   @keyframes ballBeat {
     0%, 40%, 100% { transform: scale(1); }
@@ -1689,16 +1706,30 @@
     font-size: clamp(1.6rem, 7vw, 2.4rem); letter-spacing: 7px; color: var(--c-white);
     text-shadow: -2px 0 12px rgba(239,45,74,0.55), 2px 0 12px rgba(47,125,240,0.55);
   }
+  .intro-27-wrap {
+    font-size: clamp(5.5rem, 28vw, 9rem);
+    width: 1.55em; height: 1.55em; flex: none;
+    display: grid; place-items: center;
+  }
+  .intro-27-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .intro-27-ring circle {
+    fill: rgba(0,0,0,0.28); stroke: rgba(245,200,66,0.75); stroke-width: 1.4;
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    transform: rotate(-90deg); transform-origin: 50% 50%;
+    animation: pitchDraw 1.3s ease-out 1.5s forwards;
+  }
   .intro-27 {
     position: relative;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(7rem, 34vw, 11rem); line-height: 0.85; letter-spacing: 6px;
+    font-size: 1em; line-height: 0.85; letter-spacing: 0.04em;
+    padding: 0.07em 0 0 0.04em;   /* optické vycentrování v kruhu */
     background: linear-gradient(135deg, var(--white) 0%, var(--gold) 50%, var(--gold-dark) 100%);
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 22px rgba(245,200,66,0.35));
   }
   .intro-27::before, .intro-27::after {
     content: attr(data-text); position: absolute; inset: 0;
+    padding: inherit;
     -webkit-text-fill-color: currentColor; background: none; opacity: 0;
   }
   .intro-27::before { color: var(--c-blue); animation: glitchA 3.2s steps(1) infinite; }
@@ -1747,6 +1778,7 @@
   #intro.opening .intro-tag        { animation: outUp 0.45s ease-in both; }
   #intro.opening .intro-ball-wrap  { animation: outZoom 0.55s ease-in 0.05s both; }
   #intro.opening .intro-title      { animation: outTitle 0.55s ease-in 0.1s both; }
+  #intro.opening .intro-27-wrap    { animation: outRing 0.6s ease-in 0.15s both; }
   #intro.opening .intro-countdown  { animation: outDown 0.45s ease-in 0.05s both; }
   #intro.opening .intro-enter      { animation: outPress 0.35s ease-in both; }
   @keyframes outFade  { from { opacity: 1; } to { opacity: 0; } }
@@ -1754,10 +1786,10 @@
   @keyframes outDown  { from { opacity: 1; } to { opacity: 0; transform: translateY(70px); } }
   @keyframes outZoom  { from { opacity: 1; } to { opacity: 0; transform: scale(4); } }
   @keyframes outTitle { from { opacity: 1; } to { opacity: 0; transform: scale(1.5); letter-spacing: 20px; filter: blur(6px); } }
+  @keyframes outRing  { from { opacity: 1; } to { opacity: 0; transform: scale(1.6); filter: blur(5px); } }
   @keyframes outPress { from { opacity: 1; } 40% { opacity: 1; transform: scale(0.9); } to { opacity: 0; transform: scale(1.25); } }
   /* Čáry hřiště se "odmotají" zpět — vápna první, obvod poslední */
   #intro.opening .intro-pitch > *               { animation: pitchErase 0.6s ease-in 0.45s both; }
-  #intro.opening .intro-pitch > *:nth-child(3)  { animation-delay: 0.6s; }
   #intro.opening .intro-pitch > *:nth-child(2)  { animation-delay: 0.75s; }
   #intro.opening .intro-pitch > *:nth-child(1)  { animation-delay: 0.9s; animation-duration: 0.7s; }
   @keyframes pitchErase { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 1; } }
@@ -1766,9 +1798,9 @@
   #intro.opening .gate-right { transform: translateX(102%); }
 
   @media (max-height: 640px) {
-    .intro-content { gap: 14px; }
     .intro-ball-wrap { width: 46px; height: 46px; }
-    .intro-27 { font-size: clamp(5rem, 26vw, 7rem); }
+    .intro-27-wrap { font-size: clamp(4.2rem, 22vw, 6rem); }
+    .intro-top, .intro-bottom, .intro-content { gap: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
     #intro *, #intro *::before, #intro *::after { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
@@ -1788,29 +1820,33 @@
   <canvas class="intro-fx" id="introFx"></canvas>
   <div class="intro-scan"></div>
   <div class="intro-content">
-    <div class="intro-item intro-tag">FIFA VEČÍRKY · FC 27</div>
-
-    <div class="intro-item intro-ball-wrap">
-      <div class="intro-ball-glow"></div>
-      <div class="intro-ball" id="introBall"></div>
+    <div class="intro-top">
+      <div class="intro-item intro-tag">FIFA VEČÍRKY · FC 27</div>
+      <div class="intro-item intro-ball-wrap">
+        <div class="intro-ball-glow"></div>
+        <div class="intro-ball" id="introBall"></div>
+        <div class="intro-comic">Roteiro ty vole!</div>
+      </div>
+      <div class="intro-item intro-title intro-welcome">Vítej v sezóně</div>
     </div>
 
-    <div class="intro-item intro-title">
-      <div class="intro-welcome">Vítej v sezóně</div>
+    <div class="intro-item intro-27-wrap">
+      <svg class="intro-27-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48.5" pathLength="1"/></svg>
       <div class="intro-27" data-text="27">27</div>
     </div>
 
-    <div class="intro-item intro-countdown">
-      <div class="intro-cd-label" id="introCdLabel">Další večírek · čtvrtek 18:00</div>
-      <div class="intro-cd-boxes" id="introCdBoxes">
-        <div class="intro-cd-box"><span id="cdD">–</span><small>dní</small></div>
-        <div class="intro-cd-box"><span id="cdH">–</span><small>hod</small></div>
-        <div class="intro-cd-box"><span id="cdM">–</span><small>min</small></div>
-        <div class="intro-cd-box"><span id="cdS">–</span><small>sek</small></div>
+    <div class="intro-bottom">
+      <div class="intro-item intro-countdown">
+        <div class="intro-cd-label" id="introCdLabel">Další večírek · čtvrtek 18:00</div>
+        <div class="intro-cd-boxes" id="introCdBoxes">
+          <div class="intro-cd-box"><span id="cdD">–</span><small>dní</small></div>
+          <div class="intro-cd-box"><span id="cdH">–</span><small>hod</small></div>
+          <div class="intro-cd-box"><span id="cdM">–</span><small>min</small></div>
+          <div class="intro-cd-box"><span id="cdS">–</span><small>sek</small></div>
+        </div>
       </div>
+      <button class="intro-item intro-enter" id="introEnter" onclick="enterParty()">Vstoupit na večírek</button>
     </div>
-
-    <button class="intro-item intro-enter" id="introEnter" onclick="enterParty()">Vstoupit na večírek</button>
   </div>
 </div>
 <script>
@@ -1820,8 +1856,8 @@
 const NEXT_PARTY_OVERRIDE = null;
 
 // Intro se po vstupu znovu neukazuje dalších INTRO_HIDE_HOURS hodin (aby neotravovalo
-// při refreshování výsledků). Tlačítko "▶ Intro" v hlavičce ho pustí kdykoli znovu.
-const INTRO_HIDE_HOURS = 8;
+// při refreshování výsledků). Tlačítko "▶ Přehrát intro" dole na stránce ho pustí kdykoli znovu.
+const INTRO_HIDE_HOURS = 3;
 const INTRO_SKIP = (() => {
   try { return Date.now() - Number(localStorage.getItem('fifa_intro_seen') || 0) < INTRO_HIDE_HOURS * 3600e3; }
   catch { return false; }
@@ -1868,7 +1904,6 @@ function tickIntroCountdown() {
 const INTRO_PITCH_SVG = `<svg class="intro-pitch" viewBox="0 0 300 440" aria-hidden="true">
   <rect x="10" y="10" width="280" height="420" pathLength="1"/>
   <line x1="10" y1="220" x2="290" y2="220" pathLength="1"/>
-  <circle class="p-gold" cx="150" cy="220" r="46" pathLength="1"/>
   <rect class="p-blue" x="70" y="10" width="160" height="66" pathLength="1"/>
   <rect class="p-blue" x="110" y="10" width="80" height="26" pathLength="1"/>
   <path class="p-blue" d="M118 76 A 40 40 0 0 0 182 76" pathLength="1"/>
@@ -1878,41 +1913,30 @@ const INTRO_PITCH_SVG = `<svg class="intro-pitch" viewBox="0 0 300 440" aria-hid
 </svg>`;
 document.querySelectorAll('#intro .gate-inner').forEach(el => el.innerHTML = INTRO_PITCH_SVG);
 
-// ── Fotbalový míč (klasický vzor: středový pětiúhelník + 5 okrajových) ──
-if (!INTRO_SKIP) (() => {
-  const P = (ang, r, cx = 50, cy = 50) => {
-    const a = ang * Math.PI / 180;
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-  };
-  const pts = arr => arr.map(p => p.map(n => n.toFixed(1)).join(',')).join(' ');
-  const center = [0,1,2,3,4].map(k => P(-90 + 72 * k, 17));
-  let patches = '', seams = '';
-  const outer = [0,1,2,3,4].map(k => {
-    const dir = -90 + 72 * k;
-    const [ox, oy] = P(dir, 43);
-    // pětiúhelník natočený jedním vrcholem ke středu míče
-    return [0,1,2,3,4].map(j => P(dir + 180 + 72 * j, 16, ox, oy));
-  });
-  const line = (a, b) => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}"/>`;
-  outer.forEach((pent, k) => {
-    patches += `<polygon points="${pts(pent)}"/>`;
-    seams += line(center[k], pent[0]);                  // od středu k okrajovému
-    seams += line(pent[1], outer[(k + 1) % 5][4]);      // mezi sousedními okrajovými
-  });
-  document.getElementById('introBall').innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
-    <defs>
-      <clipPath id="introBallClip"><circle cx="50" cy="50" r="46"/></clipPath>
-      <radialGradient id="introBallShade" cx="36%" cy="30%" r="80%">
-        <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#e9e9e4"/><stop offset="1" stop-color="#a9a9a2"/>
-      </radialGradient>
-    </defs>
-    <circle cx="50" cy="50" r="46" fill="url(#introBallShade)"/>
-    <g clip-path="url(#introBallClip)" fill="#15171c" stroke="#15171c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-      <polygon points="${pts(center)}"/>${patches}${seams}
+// ── Míč: kreslený Roteiro (stříbrný, tmavé pruhy, světle modrá mřížka) ──
+if (!INTRO_SKIP) document.getElementById('introBall').innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true">
+  <defs>
+    <clipPath id="introBallClip"><circle cx="50" cy="50" r="46"/></clipPath>
+    <radialGradient id="introBallShade" cx="36%" cy="28%" r="85%">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#d5dbdc"/><stop offset="1" stop-color="#8d979b"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="46" fill="url(#introBallShade)"/>
+  <g clip-path="url(#introBallClip)">
+    <g fill="none" stroke="#6fcbe6" stroke-width="0.9" opacity="0.75">
+      <ellipse cx="50" cy="50" rx="15" ry="46"/><ellipse cx="50" cy="50" rx="32" ry="46"/>
+      <path d="M4 34 Q50 46 96 34"/><path d="M4 50 Q50 62 96 50"/>
     </g>
-    <circle cx="50" cy="50" r="46" fill="none" stroke="#15171c" stroke-width="2.5"/>
-  </svg>`;
-})();
+    <g fill="#23262d">
+      <path d="M0 58 Q50 80 100 58 L100 69 Q50 93 0 69 Z"/>
+      <path d="M9 66 Q21 36 45 12 L52 17 Q31 40 21 71 Z"/>
+      <path d="M91 66 Q79 36 55 12 L48 17 Q69 40 79 71 Z"/>
+      <path d="M17 17 L33 9 L29 20 Z"/><path d="M83 17 L67 9 L71 20 Z"/>
+    </g>
+    <ellipse cx="35" cy="27" rx="13" ry="7" fill="#fff" opacity="0.55" transform="rotate(-28 35 27)"/>
+  </g>
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#15171c" stroke-width="3.2"/>
+</svg>`;
 
 // ── Ohňostroj v klubových barvách ──
 const introFx = (() => {
@@ -2041,7 +2065,6 @@ function enterParty() {
 </script>
 
 <header>
-  <button class="intro-replay" onclick="replayIntro()" title="Přehrát úvodní intro">▶ Intro</button>
   <h1>FIFA Večírky</h1>
   <p>Sleduj • Soutěž • Vyhraj</p>
 </header>
@@ -2318,6 +2341,8 @@ function enterParty() {
   </div>
 </div>
 
+
+<div class="app-footer"><button class="intro-replay" onclick="replayIntro()">▶ Přehrát intro</button></div>
 
 <div class="toast" id="toast"></div>
 
