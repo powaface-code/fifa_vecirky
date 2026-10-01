@@ -1942,14 +1942,14 @@ const introFx = (() => {
   let W = 0, H = 0, dpr = 1, rockets = [], sparks = [], running = true, launching = true;
   const start = performance.now();
   let nextLaunch = start + 700, last = start;
-  let density = 0.6; // hustota raket (na úzkém displeji ještě nižší)
+  let density = 0.3; // hustota raket (na úzkém displeji ještě nižší)
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = () => COLORS[Math.floor(Math.random() * COLORS.length)];
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = canvas.clientWidth; H = canvas.clientHeight;
-    density = W < 600 ? 0.4 : 0.6;
+    density = W < 600 ? 0.2 : 0.3;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
